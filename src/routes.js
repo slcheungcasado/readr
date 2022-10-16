@@ -2,10 +2,16 @@ import { Router } from "express";
 
 const router = Router();
 
+// PAGES |
+router.get(
+  "/my/subscriptions/devto",
+  (await import("./controllers/pages/my/subscriptions/devto/index.js")).default
+);
+
 // PAGES | STATIC
 router.get(
   "/",
-  (await import("./controllers/pages/subscriptions/index.js")).default
+  (await import("./controllers/pages/my/reading-list/index.js")).default
 );
 
 // PAGES | NOT FOUND

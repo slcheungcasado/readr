@@ -1,68 +1,47 @@
-<!-- <script>
+<script>
+  const highlightActivePage = (e) => {
+    $nav = $('.nav');
+    $navLinks = $nav.find("li a");
+    $navLinks.removeClass("active");
+    $navLinks.addClass("text-white");
+    $target = $nav.find(`li a[href="${window.location.pathname}"]`);
+    $target.addClass("active");
+  }
+
   $(document).ready(() => {
-    $("#navbar li").on('click', 'a', (e) => {
-      e.preventDefault();
-
-      console.log("Clicked on nav li");
-    });
+    highlightActivePage();
   });
-</script> -->
+</script>
 
-<!-- <div id="navbar" class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark vh-100" style="width: 280px;">
+<div id="navbar" class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark vh-100" style="width: 280px;">
   <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-    <svg class="bi pe-none me-2" width="40" height="32">
-      <use xlink:href="#bootstrap"></use>
-    </svg>
-    <span class="fs-4">Sidebar</span>
+    <span class="fs-4">readr</span>
   </a>
   <hr>
   <ul class="nav nav-pills flex-column mb-auto">
     <li class="nav-item">
-      <a href="#" class="nav-link active" aria-current="page">
-        <svg class="bi pe-none me-2" width="16" height="16">
-          <use xlink:href="#home"></use>
-        </svg>
-        Home
+      <a href="#" class="nav-link text-white">
+        Read
       </a>
     </li>
     <li class="nav-item">
-      <a href="#" class="nav-link text-white">
-        <svg class="bi pe-none me-2" width="16" height="16">
-          <use xlink:href="#speedometer2"></use>
-        </svg>
-        Dashboard
+      <a href="/" class="nav-link active" aria-current="page">
+        My Reading Lists
       </a>
     </li>
     <li class="nav-item">
-      <a href="#" class="nav-link text-white">
-        <svg class="bi pe-none me-2" width="16" height="16">
-          <use xlink:href="#table"></use>
-        </svg>
-        Orders
-      </a>
-    </li>
-    <li class="nav-item">
-      <a href="#" class="nav-link text-white">
-        <svg class="bi pe-none me-2" width="16" height="16">
-          <use xlink:href="#grid"></use>
-        </svg>
-        Products
-      </a>
-    </li>
-    <li class="nav-item">
-      <a href="#" class="nav-link text-white">
-        <svg class="bi pe-none me-2" width="16" height="16">
-          <use xlink:href="#people-circle"></use>
-        </svg>
-        Customers
+      <a href="/my/subscriptions/devto" class="nav-link text-white">
+        Dev.to
       </a>
     </li>
   </ul>
   <hr>
   <div class="dropdown">
     <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-      <img src="imgs/olive-pfp.jpeg" alt="" width="32" height="32" class="rounded-circle me-2">
-      <strong>Jeremy</strong>
+      <div class="avatar-wrapper">
+        <img src="/imgs/olive-pfp.jpeg" class="rounded-circle me-2 avatar-small">
+        <strong>Jeremy</strong>
+      </div>
     </a>
     <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
       <li><a class="dropdown-item" href="#">Profile</a></li>
@@ -72,54 +51,4 @@
       <li><a class="dropdown-item" href="#">Sign out</a></li>
     </ul>
   </div>
-</div> -->
-
-<aside class="sidebar">
-  <header>
-    readr.io
-  </header>
-  <nav class="sidebar-nav">
-
-    <ul>
-      <li>
-        <a href="#">
-          <ion-icon class="heart"></ion-icon> <span>Reading List</span>
-        </a>
-        <ul class="nav-flyout">
-          <li>
-            <a href="#"><i class="ion-ios-color-filter-outline"></i>AA</a>
-          </li>
-          <li>
-            <a href="#"><i class="ion-ios-clock-outline"></i>BB</a>
-          </li>
-          <li>
-            <a href="#"><i class="ion-android-star-outline"></i>CC</a>
-          </li>
-          <li>
-            <a href="#"><i class="ion-heart-broken"></i>DD</a>
-          </li>
-        </ul>
-      </li>
-      <li>
-        <a href="#"><i class="ion-ios-settings"></i> <span class="">Expands</span></a>
-        <ul class="nav-flyout">
-          <li>
-            <a href="#"><i class="ion-ios-color-filter-outline"></i>AA</a>
-          </li>
-          <li>
-            <a href="#"><i class="ion-ios-clock-outline"></i>BB</a>
-          </li>
-          <li>
-            <a href="#"><i class="ion-android-star-outline"></i>CC</a>
-          </li>
-          <li>
-            <a href="#"><i class="ion-heart-broken"></i>DD</a>
-          </li>
-        </ul>
-      </li>
-      <li>
-        <a href="#"><i class="ion-ios-medical-outline"></i> <span class="">No Expand</span></a>
-      </li>
-    </ul>
-  </nav>
-</aside>
+</div>
