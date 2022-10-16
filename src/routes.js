@@ -2,6 +2,12 @@ import { Router } from "express";
 
 const router = Router();
 
+// API |
+router.get(
+  "/api/my/subscriptions/devto",
+  (await import("./controllers/api/my/subscriptions/devto/index.js")).default
+);
+
 // PAGES |
 router.get(
   "/my/subscriptions/devto",

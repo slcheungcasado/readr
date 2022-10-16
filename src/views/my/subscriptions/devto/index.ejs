@@ -5,7 +5,8 @@
     try {
       const resp = await axios({
         method: 'GET',
-        url: 'https://dev.to/api/articles',
+        // url: 'https://dev.to/api/articles',
+        url: '/api/my/subscriptions/devto'
       });
       console.log(resp);
       generatePage({
