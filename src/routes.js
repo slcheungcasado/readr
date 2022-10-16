@@ -1,5 +1,14 @@
-import { Router } from 'express'
+import { Router } from "express";
 
-const router = Router()
+const router = Router();
 
-export default router
+// PAGES | STATIC
+router.get(
+  "/",
+  (await import("./controllers/pages/subscriptions/index.js")).default
+);
+
+// PAGES | NOT FOUND
+router.use((await import("./controllers/pages/not-found.js")).default);
+
+export default router;
