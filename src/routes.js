@@ -2,22 +2,40 @@ import { Router } from "express";
 
 const router = Router();
 
-// API |
-router.get(
-  "/api/my/subscriptions/devto",
-  (await import("./controllers/api/my/subscriptions/devto/index.js")).default
+// API | AUTH
+router.post(
+  "/api/auth/register",
+  (await import("./controllers/api/auth/register.js")).default
 );
 
-// PAGES |
+// API | ARTICLES
+//index (also search/filter/pagination)
 router.get(
-  "/my/subscriptions/devto",
-  (await import("./controllers/pages/my/subscriptions/devto/index.js")).default
+  "/api/articles",
+  (await import("./controllers/api/articles/index.js")).default
 );
+
+//show
+// router.get(
+//   "/api/articles/:id",
+//   (await import("./controllers/api/articles/show.js")).default
+// );
+
+// PAGES | ARTICLES
+router.get(
+  "/articles",
+  (await import("./controllers/pages/articles/index.js")).default
+);
+
+// router.get(
+//   "/articles/:id",
+//   (await import("./controllers/pages/articles/show.js")).default
+// );
 
 // PAGES | STATIC
 router.get(
   "/",
-  (await import("./controllers/pages/my/reading-list/index.js")).default
+  (await import("./controllers/pages/articles/index.js")).default
 );
 
 // PAGES | NOT FOUND
