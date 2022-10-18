@@ -10,7 +10,7 @@ export default yup.object({
       message: () => "Email already exists",
       test: async (value) => {
         try {
-          await prisma.users.findUnique({
+          await prisma.user.findUnique({
             where: { email: value },
             rejectOnNotFound: true,
           });
@@ -20,9 +20,10 @@ export default yup.object({
         }
       },
     }),
-  password: yup.string().min(6).required(),
+  password: yup.string().min(6).required().label("Password"),
   passwordConfirmation: yup
     .string()
     .oneOf([yup.ref("password"), null], "Passwords must match")
-    .required(),
+    .required()
+    .label("Password Confirmation"),
 });

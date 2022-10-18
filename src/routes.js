@@ -4,11 +4,11 @@ import registrationSchema from "./schemas/registration.js";
 const router = Router();
 
 // API | AUTH
-// router.post(
-//   "/api/auth/register",
-//   checkData(registrationSchema),
-//   (await import("./controllers/api/auth/register.js")).default
-// );
+router.post(
+  "/api/auth/register",
+  checkData(registrationSchema),
+  (await import("./controllers/api/auth/register.js")).default
+);
 
 // API | ARTICLES
 //index (also search/filter/pagination)

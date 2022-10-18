@@ -1,6 +1,7 @@
 import handleErrors from "../../_helpers/handle-errors.js";
 import prisma from "../../_helpers/prisma.js";
 import bcrypt from "bcrypt";
+import _ from "lodash";
 
 export default async function (req, res) {
   try {

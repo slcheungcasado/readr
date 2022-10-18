@@ -6,8 +6,10 @@ export function checkData(schema) {
     try {
       const { body } = req;
       req.verifiedData = await schema.validate(body, validationConfigs);
+      console.log("Passes the validation schema");
       return next();
     } catch (err) {
+      console.log("Fails the validation schema");
       return handleErrors(res, err);
     }
   };
