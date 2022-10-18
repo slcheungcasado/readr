@@ -1,10 +1,12 @@
 import { Router } from "express";
-
+import { checkData } from "./_middlewares/check-data.js";
+import registrationSchema from "./schemas/registration.js";
 const router = Router();
 
 // API | AUTH
 // router.post(
 //   "/api/auth/register",
+//   checkData(registrationSchema),
 //   (await import("./controllers/api/auth/register.js")).default
 // );
 

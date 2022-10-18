@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Article" ALTER COLUMN "url" SET DATA TYPE VARCHAR(400);

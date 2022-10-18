@@ -1,9 +1,20 @@
 import { extract } from "article-parser";
+import _ from "lodash";
+// import { Readability, isProbablyReaderable } from "@mozilla/readability";
+// import { JSDOM } from "jsdom";
 
-import { Readability, isProbablyReaderable } from "@mozilla/readability";
-import { JSDOM } from "jsdom";
+import prisma from "./prisma.js";
 
-async function runArticleParser(url, dataToSave, { needHTML = false } = {}) {
+const fieldsToOmit = [
+  "content",
+  "description",
+  "image",
+  "author",
+  "source",
+  "readingTime",
+];
+
+async function runArticleParser(dataToSave, { needHTML = false } = {}) {
   // From article-parser
   // {
   //   descriptionBetter: data.description,
@@ -13,8 +24,9 @@ async function runArticleParser(url, dataToSave, { needHTML = false } = {}) {
   //   source: data.source,
   //   readingTime: data.ttr
   // }
+
   try {
-    const data = await extract(article.url);
+    const data = await extract(dataToSave.url, { wordsPerMinute: 250 });
     if (!data) {
       return dataToSave;
     }
@@ -25,57 +37,47 @@ async function runArticleParser(url, dataToSave, { needHTML = false } = {}) {
     dataToSave.source = data?.source || "";
     dataToSave.readingTime = data?.ttr || 0;
   } catch (err) {
-    console.error(err);
-    // throw Error('Error, could not extract article details');
-    dataToSave.description = data?.description || "";
-    dataToSave.image = data?.image || "";
-    if (needHTML) dataToSave.content = "<h1>Not Available</h1>";
-    dataToSave.author = data?.author || "";
-    dataToSave.source = data?.source || "";
-    dataToSave.readingTime = data?.ttr || 0;
+    // console.log("failed to parse", dataToSave.title);
+    // console.log("url", dataToSave.url);
     return dataToSave;
   }
   return dataToSave;
 }
 
-function runReadability(doc, dataToSave) {
-  // From JSDOM.fromURL() + Readability
-  // {
-  //   descriptionShort: data.excerpt,
-  //   content: data.content, (best html parsing)
-  // }
-  const data = new Readability(doc).parse();
-  if (!data) {
-    return dataToSave;
-  }
-  dataToSave.content = data.content;
-  return dataToSave;
-}
+// function runReadability(doc, dataToSave) {
+//   // From JSDOM.fromURL() + Readability
+//   // {
+//   //   descriptionShort: data.excerpt,
+//   //   content: data.content, (best html parsing)
+//   // }
+//   const data = new Readability(doc).parse();
+//   if (!data) {
+//     return dataToSave;
+//   }
+//   dataToSave.content = data.content;
+//   return dataToSave;
+// }
 
 export async function cacheArticle(article) {
-  if (article?.url) {
-    return {};
+  if (!article?.link) {
+    return null;
   }
 
   // From GNews API Call
-  const dataToSave = {
+  let dataToSave = {
     title: article?.title,
-    url: article.url,
-    pubDate: article.pubDate,
+    url: article.link,
+    pubDate: new Date(article.pubDate),
     relatedLinks: article.content,
   };
 
   // Article Parsing (Preparing data for Prisma)
-  const doc = await JSDOM.fromURL(article.url);
-  if (isProbablyReaderable(doc)) {
-    dataToSave = runReadability(doc, dataToSave);
-    dataToSave = runArticleParser(article.url, dataToSave, { needHTML: false });
-  } else {
-    dataToSave = runArticleParser(article.url, dataToSave, { needHTML: true });
-  }
+  dataToSave = await runArticleParser(dataToSave, {
+    needHTML: true,
+  });
 
   // expected data
-  // const preparedData = {
+  // const dataToSave = {
   //   title: "",
   //   url: "",
   //   pubDate: "",
@@ -89,4 +91,20 @@ export async function cacheArticle(article) {
   // };
 
   // Do prisma article create query
+  try {
+    const articleObj = await prisma.article.create({ data: dataToSave });
+    return articleObj;
+  } catch (err) {
+    // throw err;
+    // console.log("Failed to write article, trying filteredData...");
+    const filteredData = _.omit(dataToSave, fieldsToOmit);
+    try {
+      const filteredObj = await prisma.article.create({ data: filteredData });
+      return filteredObj;
+    } catch (err) {
+      console.log(err);
+      console.log("Failed to store article: ", filteredData);
+      return null;
+    }
+  }
 }

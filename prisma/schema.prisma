@@ -25,7 +25,7 @@ model ReadingList {
   user               User                 @relation(fields: [userId], references: [id])
   userId             Int                  @unique
   articles           Article[]
-  ReadingListArticle ReadingListArticle[]
+  readingListArticle ReadingListArticle[]
 }
 
 model ReadingListArticle {
@@ -44,20 +44,20 @@ model Article {
   url                String               @unique
   pubDate            DateTime?
   relatedLinks       String[]
-  content            String
+  content            String?
   description        String?
   image              String?
   author             String?
   source             String?
   readingTime        Int?
-  readinglist        ReadingList[]
+  readingList        ReadingList[]
   tags               Tag[]
-  ReadingListArticle ReadingListArticle[]
+  readingListArticle ReadingListArticle[]
 }
 
 model Tag {
   id                 Int                  @id @default(autoincrement())
   name               String               @unique
   articles           Article[]
-  readinglistArticle ReadingListArticle[]
+  readingListArticle ReadingListArticle[]
 }

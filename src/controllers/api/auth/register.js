@@ -1,5 +1,6 @@
 import handleErrors from "../../_helpers/handle-errors.js";
 import prisma from "../../_helpers/prisma.js";
+import bcrypt from "bcrypt";
 
 export default async function (req, res) {
   try {
@@ -14,7 +15,12 @@ export default async function (req, res) {
       dataToSave.username = verifiedData.username;
     }
 
-    const newUser = await prisma.user.create({ data: dataToSave });
+    const newUser = await prisma.user.create({
+      data: dataToSave,
+      include: {
+        readingList: true,
+      },
+    });
 
     req.session.user = { id: newUser.id };
     await req.session.save();
