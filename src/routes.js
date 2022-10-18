@@ -3,10 +3,10 @@ import { Router } from "express";
 const router = Router();
 
 // API | AUTH
-router.post(
-  "/api/auth/register",
-  (await import("./controllers/api/auth/register.js")).default
-);
+// router.post(
+//   "/api/auth/register",
+//   (await import("./controllers/api/auth/register.js")).default
+// );
 
 // API | ARTICLES
 //index (also search/filter/pagination)

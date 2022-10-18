@@ -40,7 +40,7 @@
   }
 
   const generatePage = (info) => {
-    console.log("info", info);
+    console.log("info", info?.articles?.article?.content);
     const $page = $("#pages-articles-index");
     const $title = generateTitle(info);
     const $articles = generateArticles(info);
