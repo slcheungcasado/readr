@@ -4,6 +4,7 @@ import registrationSchema from "./schemas/registration.js";
 import loginSchema from "./schemas/login.js";
 import authenticateUser from "./_middlewares/authenticate-user.js";
 import updateProfile from "./schemas/update-profile.js";
+import alreadyLoggedIn from "./_middlewares/already-logged-in.js";
 const router = Router();
 
 // API | AUTH
@@ -56,16 +57,17 @@ router.use("/api", (await import("./controllers/api/not-found.js")).default);
 // PAGES | AUTH
 router.get(
   "/auth/register",
+  alreadyLoggedIn("html"),
   (await import("./controllers/pages/auth/register.js")).default
 );
 
 router.get(
   "/auth/login",
+  alreadyLoggedIn("html"),
   (await import("./controllers/pages/auth/login.js")).default
 );
 
 // PAGES | MY PROFILE | AUTH REQUIRED
-
 router.get(
   "/my/profile",
   authenticateUser("html"),
