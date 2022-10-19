@@ -2,6 +2,7 @@ import handleErrors from "../../_helpers/handle-errors.js";
 import prisma from "../../_helpers/prisma.js";
 import bcrypt from "bcrypt";
 import _ from "lodash";
+import uploadFileAsync from "../../_helpers/upload-file.js";
 
 export default async function (req, res) {
   try {
@@ -11,11 +12,15 @@ export default async function (req, res) {
       passwordHash: await bcrypt.hash(verifiedData.password, 10),
       avatar: verifiedData?.avatar || null,
     };
-    console.log("verifiedData", verifiedData);
-    console.log("verifiedData.username", verifiedData.username);
+    // console.log("verifiedData", verifiedData);
+    // console.log("verifiedData.username", verifiedData.username);
     if (verifiedData?.username) {
-      console.log("This happens?");
       dataToSave.username = verifiedData.username;
+    }
+
+    if (verifiedData.avatar) {
+      await uploadFileAsync(verifiedData, req);
+      dataToSave.avatar = verifiedData.avatar;
     }
 
     const newUser = await prisma.user.create({

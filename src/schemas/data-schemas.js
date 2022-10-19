@@ -46,3 +46,5 @@ export const validationConfigs = {
   abortEarly: false,
   stripUnknown: true,
 };
+
+export const SUPPORTED_FORMATS = ["image/jpg", "image/jpeg", "image/png"];
