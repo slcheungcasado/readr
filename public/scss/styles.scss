@@ -1,5 +1,112 @@
 @import "node_modules/bootstrap/scss/bootstrap";
 
+$bg-vdark: #1e2124;
+$bg-dark: #282b30;
+$bg-ldark: #36393e;
+$bg-lldark: #36393e;
+$bg-accent: #72da7b;
+$bg-accent-border: #3fac48;
+
+$bg-primary: #212528;
+
+body {
+  color: white;
+}
+
+.app {
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+}
+
+#navbar {
+  min-width: 280px;
+  max-width: 280px;
+  min-height: 100vh;
+  transition: all 0.3s;
+
+  &.expanded {
+    margin-left: -280px;
+  }
+
+  @media (max-width: 768px) {
+    margin-left: -280px;
+    &.expanded {
+      background-color: red;
+      margin-left: 0;
+    }
+  }
+}
+
+#navbar-expand-button-container {
+  background-color: $bg-ldark;
+  width: 0;
+  button:hover {
+    background-color: $bg-accent;
+    border-color: $bg-accent-border;
+  }
+  #navbar-collapse {
+    margin-top: 40px;
+    position: absolute;
+  }
+}
+
+#pages-auth-register-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: $bg-ldark;
+
+  #register-header-wrapper {
+    background-color: $bg-primary;
+    border-radius: 10px;
+    min-width: 200px;
+    max-width: 250px;
+    margin-top: 7rem;
+    margin-bottom: 5rem;
+    padding: 5px;
+  }
+
+  #pages-auth-register {
+    background-color: $bg-primary;
+    min-width: 380px;
+    min-height: 600px;
+    max-width: 400px;
+
+    border-radius: 10px;
+    margin-bottom: 10rem;
+    .row {
+      // justify-content: space-around;
+      margin: 0;
+      padding-bottom: 20px;
+      #form-wrapper {
+        // background-color: yellow;
+        max-width: 380px;
+        flex-grow: 1;
+        #register-form {
+          display: flex;
+          flex-direction: column;
+          button[type="submit"] {
+            align-self: center;
+            max-width: 154px;
+            min-width: 134px;
+            margin-top: 10px;
+          }
+          button[type="submit"]:hover {
+            background-color: $bg-accent;
+            border-color: $bg-accent-border;
+          }
+        }
+      }
+    }
+  }
+}
+// // <div class="text-center text-bg-dark">
+// //   <h1>readr</h1>
+// // </div>
+// // <div id="pages-auth-register"></div>
+
 .avatar-wrapper {
   display: flex;
   // flex-direction: column;

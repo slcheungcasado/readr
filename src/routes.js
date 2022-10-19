@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { checkData } from "./_middlewares/check-data.js";
 import registrationSchema from "./schemas/registration.js";
+import loginSchema from "./schemas/login.js";
 const router = Router();
 
 // API | AUTH
@@ -8,6 +9,17 @@ router.post(
   "/api/auth/register",
   checkData(registrationSchema),
   (await import("./controllers/api/auth/register.js")).default
+);
+
+router.post(
+  "/api/auth/login",
+  checkData(loginSchema),
+  (await import("./controllers/api/auth/login.js")).default
+);
+
+router.delete(
+  "/api/auth/logout",
+  (await import("./controllers/api/auth/logout.js")).default
 );
 
 // API | ARTICLES
@@ -33,6 +45,12 @@ router.get(
 //   "/articles/:id",
 //   (await import("./controllers/pages/articles/show.js")).default
 // );
+
+// PAGES | AUTH
+router.get(
+  "/auth/register",
+  (await import("./controllers/pages/auth/register.js")).default
+);
 
 // PAGES | STATIC
 router.get(

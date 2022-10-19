@@ -11,8 +11,10 @@ export default async function (req, res) {
       passwordHash: await bcrypt.hash(verifiedData.password, 10),
       avatar: verifiedData?.avatar || null,
     };
-
+    console.log("verifiedData", verifiedData);
+    console.log("verifiedData.username", verifiedData.username);
     if (verifiedData?.username) {
+      console.log("This happens?");
       dataToSave.username = verifiedData.username;
     }
 

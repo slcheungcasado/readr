@@ -19,7 +19,8 @@ export default yup.object({
           return true;
         }
       },
-    }),
+    })
+    .label("Email"),
   password: yup.string().min(6).required().label("Password"),
   passwordConfirmation: yup
     .string()
