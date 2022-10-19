@@ -9,18 +9,26 @@
   }
 
   const toggleNavBar = (e) => {
-    console.log("this happens");
     $("#navbar").toggleClass('expanded');
     $("#navbar-collapse").toggleClass('expanded');
   }
 
+  // const updateNavbar = ({
+  //   user.
+  // } = {}) => {
+
+  // }
+
   $(document).ready(() => {
     highlightActivePage();
+    // updateNavbar();
+
+
     $('#navbar-collapse').on('click', toggleNavBar);
   });
 </script>
 
-<div id="navbar" class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark vh-100">
+<div id="navbar" class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark">
   <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
     <span class="fs-4">readr</span>
   </a>
@@ -33,7 +41,7 @@
       </a>
     </li>
     <li class="nav-item">
-      <a href="/" class="nav-link">
+      <a href="/" class="nav-link text-white">
         <i class="fas fa-list"></i>
         <span>My Reading Lists</span>
       </a>
@@ -46,10 +54,11 @@
     </li>
   </ul>
   <hr>
+  <div id="navbar-lower"></div>
   <div class="dropdown">
     <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
       <div class="avatar-wrapper">
-        <img src="/imgs/olive-pfp.jpeg" class="rounded-circle me-2 avatar-small">
+        <img src="/imgs/no-profile-picture-icon.png" class="rounded-circle me-2 avatar-small">
         <strong>Jeremy</strong>
       </div>
     </a>
@@ -62,6 +71,9 @@
     </ul>
   </div>
 </div>
+
+
+
 <div id="navbar-expand-button-container">
   <nav class="navbar navbar-expand-lg navbar-light">
     <div class="container-fluid">

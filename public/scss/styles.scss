@@ -17,13 +17,14 @@ body {
   display: flex;
   width: 100%;
   align-items: stretch;
+  background-color: $bg-ldark;
 }
 
 #navbar {
   min-width: 280px;
   max-width: 280px;
   min-height: 100vh;
-  transition: all 0.3s;
+  transition: margin-left 0.3s;
 
   &.expanded {
     margin-left: -280px;
@@ -32,7 +33,7 @@ body {
   @media (max-width: 768px) {
     margin-left: -280px;
     &.expanded {
-      background-color: red;
+      // background-color: red;
       margin-left: 0;
     }
   }

@@ -46,13 +46,13 @@
           </div>
 
           <div class="mb-3">
-            <label for="user-username" class="form-label">Username <small>(Optional)</small></label>
+            <label for="user-username" class="form-label">Username <small class="text-muted">(Optional)</small></label>
             <input id="user-username" class="form-control ${errors?.username && 'is-invalid'}" name="username" value="${user?.username || ''}" type="text"></input>
             <div class="invalid-feedback">${errors?.username || ''}</div>
           </div>
 
           <div class="mb-3">
-            <label for="user-avatar" class="form-label">Change Avatar <small>(Optional)</small></label>
+            <label for="user-avatar" class="form-label">Change Avatar <small class="text-muted">(Optional)</small></label>
             <input
             id="user-avatar"
             name="avatar"
@@ -81,7 +81,7 @@
     e.preventDefault()
 
     const data = new FormData(e.target)
-    console.log('data', parsedData(data));
+    console.log('data', parseFormData(data));
     $('#register-form button[type="submit"]').attr('disabled', true)
 
     axios({
