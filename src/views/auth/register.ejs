@@ -5,7 +5,8 @@
     user,
     errors
   } = {}) => {
-    return `
+
+    const $form = $(`
     <div class="row">
       <div id="form-wrapper" class="col-12 col-md-10 col-lg-8 px-4">
         <form id="register-form">
@@ -57,7 +58,7 @@
             id="user-avatar"
             name="avatar"
             type="file"
-            class="form-control ${(errors?.avatar)? 'is-invalid' : ''}"
+            class="form-control"
             />
             <div class="invalid-feedback">${errors?.avatar || ''}</div>
           </div>
@@ -66,7 +67,14 @@
         </form>
       </div>
     </div>
-  `
+  `);
+
+    if (user?.avatar?.constructor?.name === 'File') {
+      const $avatar = $('#user-avatar').attr('class', `form-control ${(errors?.avatar)? 'is-invalid' : ''}`);
+      $form.find('#user-avatar').replaceWith($avatar);
+    }
+
+    return $form
   }
 
   const generatePage = (info) => {
@@ -78,11 +86,11 @@
   }
 
   const handleRegister = (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    const data = new FormData(e.target)
+    const data = new FormData(e.target);
     console.log('data', parseFormData(data));
-    $('#register-form button[type="submit"]').attr('disabled', true)
+    $('#register-form button[type="submit"]').attr('disabled', true);
 
     axios({
       method: 'POST',
@@ -95,6 +103,8 @@
         user: parseFormData(data),
         errors: err.response.data
       })
+    }).finally(() => {
+      $('#register-form button[type="submit"]').attr('disabled', false);
     })
   }
 
