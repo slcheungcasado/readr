@@ -1,0 +1,83 @@
+@import "./styles.scss";
+
+#pages-my-profile-edit-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: scroll;
+  width: 100vw;
+  background-color: $bg-ldark;
+
+  #profile-edit-header-wrapper {
+    background-color: $bg-primary;
+    border-radius: 10px;
+    min-width: 200px;
+    max-width: 250px;
+    margin-top: 7rem;
+    margin-bottom: 5rem;
+    padding: 5px;
+  }
+
+  #pages-my-profile-edit {
+    background-color: $bg-primary;
+    min-width: 380px;
+    min-height: 800px;
+    max-width: 400px;
+
+    border-radius: 10px;
+    margin-bottom: 10rem;
+    .row {
+      margin: 0;
+      padding-bottom: 20px;
+      #form-wrapper {
+        // background-color: yellow;
+        max-width: 380px;
+        flex-grow: 1;
+
+        .avatar-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+
+          .avatar-big {
+            margin: 10px;
+            max-height: 100px;
+            max-width: 100px;
+            img {
+              height: 100px;
+              width: 100px;
+              border-radius: 50%;
+            }
+          }
+
+          .avatar-small {
+            margin: 10px;
+            max-height: 32px;
+            max-width: 32px;
+            img {
+              height: 32px;
+              width: 32px;
+              border-radius: 50%;
+            }
+          }
+        }
+
+        #profile-edit-form {
+          display: flex;
+          flex-direction: column;
+
+          button[type="submit"] {
+            align-self: center;
+            max-width: 154px;
+            min-width: 134px;
+            margin-top: 10px;
+          }
+          button[type="submit"]:hover {
+            background-color: $bg-accent;
+            border-color: $bg-accent-border;
+          }
+        }
+      }
+    }
+  }
+}

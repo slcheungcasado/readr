@@ -53,17 +53,6 @@ router.get(
 // API | NOT FOUND
 router.use("/api", (await import("./controllers/api/not-found.js")).default);
 
-// PAGES | ARTICLES
-router.get(
-  "/articles",
-  (await import("./controllers/pages/articles/index.js")).default
-);
-
-// router.get(
-//   "/articles/:id",
-//   (await import("./controllers/pages/articles/show.js")).default
-// );
-
 // PAGES | AUTH
 router.get(
   "/auth/register",
@@ -74,6 +63,25 @@ router.get(
   "/auth/login",
   (await import("./controllers/pages/auth/login.js")).default
 );
+
+// PAGES | MY PROFILE | AUTH REQUIRED
+
+router.get(
+  "/my/profile",
+  authenticateUser("html"),
+  (await import("./controllers/pages/my/profile/update.js")).default
+);
+
+// PAGES | ARTICLES
+router.get(
+  "/articles",
+  (await import("./controllers/pages/articles/index.js")).default
+);
+
+// router.get(
+//   "/articles/:id",
+//   (await import("./controllers/pages/articles/show.js")).default
+// );
 
 // PAGES | STATIC
 router.get(

@@ -1,4 +1,5 @@
 import yup from "yup";
+import { SUPPORTED_FORMATS } from "./data-schemas.js";
 
 export default yup.object().shape(
   {
@@ -29,6 +30,7 @@ export default yup.object().shape(
         .required(),
       otherwise: yup.string().notRequired(),
     }),
+    username: yup.string().label("Username"),
     avatar: yup
       .mixed()
       .test({

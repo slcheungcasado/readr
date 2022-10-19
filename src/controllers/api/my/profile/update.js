@@ -1,3 +1,12 @@
+import bcrypt from "bcrypt";
+import _ from "lodash";
+
+import handleErrors from "../../../_helpers/handle-errors.js";
+import updateProfile from "../../../../schemas/update-profile.js";
+import prisma from "../../../_helpers/prisma.js";
+import { s3 } from "../../../_helpers/s3-client.js";
+import uploadFileAsync from "../../../_helpers/upload-file.js";
+
 export default async function (req, res) {
   try {
     const {
@@ -41,6 +50,10 @@ export default async function (req, res) {
       dataToSave.passwordHash = verifiedData?.newPassword
         ? await bcrypt.hash(verifiedData.newPassword, 10)
         : currData.passwordHash;
+
+      dataToSave.username = verifiedData?.username
+        ? verifiedData.username
+        : currData.username;
 
       // assumptions: not checking if the user is re-uploading the same avatar file
       // if file is in another bucket then this would throw an error

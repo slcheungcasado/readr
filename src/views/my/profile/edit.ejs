@@ -1,0 +1,161 @@
+<%- contentFor('styles') %>
+<link rel="stylesheet" href="/scss/profile.scss">
+
+<%- contentFor('scripts') %>
+<script>
+  let avatarURL = $('.nav-avatar-wrapper > img').attr('src') || '/imgs/no-profile-picture-icon.png';
+
+  const generateTitle = ({
+    isLoading
+  } = {}) => {
+    return '<h2 class="text-center py-4">Edit Profile</h2>';
+  }
+
+  const generateForm = ({
+    isLoading,
+    user,
+    errors
+  } = {}) => {
+    if (user?.avatar?.constructor?.name === 'String') {
+      avatarURL = user.avatar || avatarURL;
+    } else {
+      avatarURL = $('.nav-avatar-wrapper > img').attr('src') || '/imgs/no-profile-picture-icon.png';
+    }
+
+    const $form = $(`
+    <div class="row">
+      <div id="form-wrapper" class="col-12 col-md-10 col-lg-8 px-4">
+        <div class="rounded-circle avatar-wrapper ${(isLoading)? 'invisible' : ''}">
+          <img src="${avatarURL}" class="rounded-circle avatar-big" />
+        </div>
+        <form id="profile-edit-form">
+          <div class="mb-3">
+            <label for="user-email" class="form-label">Email<sup>*</sup></label>
+            <input
+              id="user-email"
+              class="form-control ${(errors?.email)? 'is-invalid' : ''}"
+              name="email"
+              value="${user?.email || ''}"
+              type="email"
+            ></input>
+            <div class="invalid-feedback">${(errors?.email)? errors?.email : ''}</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="user-password" class="form-label">Password<sup>*</sup></label>
+            <input
+              id="user-password"
+              class="form-control ${(errors?.password)?'is-invalid' : ''}"
+              name="password"
+              value="${user?.password || ''}"
+              type="password"
+            ></input>
+            <div class="invalid-feedback">${errors?.password || ''}</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="user-password-confirmation" class="form-label">Confirm Password<sup>*</sup></label>
+            <input
+              id="user-password-confirmation"
+              class="form-control ${(errors?.passwordConfirmation)? 'is-invalid' : ''}"
+              name="passwordConfirmation"
+              value="${user?.passwordConfirmation || ''}"
+              type="password"
+            ></input>
+            <div class="invalid-feedback">${errors?.passwordConfirmation || ''}</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="user-username" class="form-label">Username <small class="text-muted">(Optional)</small></label>
+            <input id="user-username" class="form-control ${(errors?.username)? 'is-invalid' : ''}" name="username" value="${user?.username || ''}" type="text"></input>
+            <div class="invalid-feedback">${errors?.username || ''}</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="user-avatar" class="form-label">Change Avatar <small class="text-muted">(Optional)</small></label>
+            <input
+            id="user-avatar"
+            name="avatar"
+            type="file"
+            class="form-control"
+            />
+            <div class="invalid-feedback">${errors?.avatar || ''}</div>
+          </div>
+
+          <button class="btn btn-secondary" type="submit">Submit</button>
+        </form>
+      </div>
+    </div>
+  `);
+
+    if (user?.avatar?.constructor?.name === 'File') {
+      const $avatar = $('#user-avatar').attr('class', `form-control ${(errors?.avatar)? 'is-invalid' : ''}`);
+      $form.find('#user-avatar').replaceWith($avatar);
+    }
+
+    return $form;
+  }
+
+  const generatePage = (info) => {
+    const $page = $('#pages-my-profile-edit');
+    const $title = generateTitle(info);
+    const $form = generateForm(info);
+
+    $page.html('').append($title).append($form);
+  }
+
+  const handleProfileEdit = (e) => {
+    e.preventDefault();
+
+    const data = new FormData(e.target);
+    console.log('data', parseFormData(data));
+    $('#profile-edit-form button[type="submit"]').attr('disabled', true);
+
+    axios({
+      method: 'PUT',
+      url: '/api/my/profile',
+      data
+    }).then(() => {
+      window.location.href = `/articles`
+    }).catch((err) => {
+      generatePage({
+        user: parseFormData(data),
+        errors: err.response.data
+      })
+    }).finally(() => {
+      $('#profile-edit-form button[type="submit"]').attr('disabled', false);
+    })
+  }
+
+  const getProfile = () => {
+    axios({
+      method: "GET",
+      url: "/api/my/profile"
+    }).then((resp) => {
+      generatePage({
+        user: resp.data
+      });
+    }).catch((err) => {
+      console.error(err);
+      generatePage({
+        isLoading: true,
+      });
+    });
+  }
+
+  $(document).ready(() => {
+    generatePage({
+      isLoading: true
+    });
+    getProfile();
+    $('#pages-my-profile-edit').on('submit', '#profile-edit-form', handleProfileEdit);
+  })
+</script>
+
+<%- contentFor('body') %>
+<div id="pages-my-profile-edit-wrapper" class="container-fluid">
+  <div id="profile-edit-header-wrapper" class="text-center">
+    <h1>readr</h1>
+  </div>
+  <div id="pages-my-profile-edit"></div>
+</div>

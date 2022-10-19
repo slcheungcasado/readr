@@ -25,9 +25,9 @@
     <hr>
     <div class="dropdown">
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-        <div class="avatar-wrapper">
-          <img src="${(user?.avatar)? user.avatar : '/imgs/no-profile-picture-icon.png'}" class="rounded-circle me-2 avatar-small">
-          <strong>${(user?.username)? user.username : 'N/A'}</strong>
+        <div class="nav-avatar-wrapper">
+          <img src="${(user?.avatar)? user.avatar : '/imgs/no-profile-picture-icon.png'}" class="rounded-circle me-2 nav-avatar-small">
+          <strong class="line-clamp">${(user?.username)? user.username : 'N/A'}</strong>
         </div>
       </a>
       <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
