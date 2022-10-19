@@ -1,0 +1,90 @@
+<%- contentFor('styles') %>
+<link rel="stylesheet" href="/scss/login.scss">
+
+<%- contentFor('scripts') %>
+<script>
+  const generateForm = ({
+    user,
+    errors
+  } = {}) => {
+
+    const $form = $(`
+    <div class="row">
+      <div id="form-wrapper" class="col-12 col-md-10 col-lg-8 px-4">
+        <form id="login-form">
+          <div class="mb-3">
+            <label for="user-email" class="form-label">Email<sup>*</sup></label>
+            <input
+              id="user-email"
+              class="form-control ${errors?.email && 'is-invalid'}"
+              name="email"
+              value="${user?.email || ''}"
+              type="email"
+            ></input>
+            <div class="invalid-feedback">${errors?.email || ''}</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="user-password" class="form-label">Password<sup>*</sup></label>
+            <input
+              id="user-password"
+              class="form-control ${errors?.password && 'is-invalid'}"
+              name="password"
+              value="${user?.password || ''}"
+              type="password"
+            ></input>
+            <div class="invalid-feedback">${errors?.password || ''}</div>
+          </div>
+
+          <button class="btn btn-secondary" type="submit">Login</button>
+        </form>
+      </div>
+    </div>
+  `);
+    return $form
+  }
+
+  const generatePage = (info) => {
+    const $page = $('#pages-auth-login')
+    const $title = '<h2 class="text-center py-4">Welcome</h2>'
+    const $form = generateForm(info)
+
+    $page.html('').append($title).append($form)
+  }
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+
+    const data = new FormData(e.target);
+    console.log('data', parseFormData(data));
+    $('#login-form button[type="submit"]').attr('disabled', true);
+
+    axios({
+      method: 'POST',
+      url: '/api/auth/login',
+      data
+    }).then(() => {
+      window.location.href = `/articles`
+    }).catch((err) => {
+      generatePage({
+        user: parseFormData(data),
+        errors: err.response.data
+      })
+    }).finally(() => {
+      $('#login-form button[type="submit"]').attr('disabled', false);
+    })
+  }
+
+  $(document).ready(() => {
+    generatePage()
+    $('#pages-auth-login').on('submit', '#login-form', handleLogin)
+  })
+</script>
+
+<%- contentFor('body') %>
+<div id="pages-auth-login-wrapper" class="container-fluid">
+  <div id="login-header-wrapper" class="text-center">
+    <h1>readr</h1>
+  </div>
+  <div id="pages-auth-login"></div>
+</div>

@@ -5,11 +5,11 @@ export function checkData(schema) {
   return async function (req, res, next) {
     try {
       const { body } = req;
-      console.log("body.username", body.username);
       req.verifiedData = await schema.validate(body, validationConfigs);
-      console.log("req.verifiedData.username", req.verifiedData.username);
+      console.log("Data passes validation");
       return next();
     } catch (err) {
+      console.log("Data fails validation");
       return handleErrors(res, err);
     }
   };

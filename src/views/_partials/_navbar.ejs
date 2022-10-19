@@ -13,18 +13,99 @@
     $("#navbar-collapse").toggleClass('expanded');
   }
 
-  // const updateNavbar = ({
-  //   user.
-  // } = {}) => {
+  const replaceNavLower = ({
+    isLoading,
+    user
+  } = {}) => {
+    const $navLower = $("#navbar-lower");
 
-  // }
+    if (isLoading) return;
+
+    const userLoggedInUI = `
+    <hr>
+    <div class="dropdown">
+      <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="avatar-wrapper">
+          <img src="${(user?.avatar)? user.avatar : '/imgs/no-profile-picture-icon.png'}" class="rounded-circle me-2 avatar-small">
+          <strong>${(user?.username)? user.username : 'N/A'}</strong>
+        </div>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+        <li>
+          <a class="dropdown-item" href="/my/profile">
+            <i class="fas fa-address-card"></i>
+            <span>Profile</span>
+          </a>
+        </li>
+        <li>
+          <hr class="dropdown-divider">
+        </li>
+        <li>
+          <a id="auth-logout" class="dropdown-item text-danger" href="#">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Log out</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    `;
+    const userNotLoggedInUI = `
+    <hr>
+    <ul class="nav nav-pills d-flex">
+      <li class="nav-item">
+        <a href="/auth/login" class="nav-link text-white">
+          <i class="fas fa-sign-in-alt"></i>
+          <span>Login</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/auth/register" class="nav-link text-white">
+          <i class="fas fa-user-plus"></i>
+          <span>Register</span>
+        </a>
+      </li>
+    </ul>
+    `;
+
+    return $navLower.html(user ? userLoggedInUI : userNotLoggedInUI);
+
+  }
+
+  const getMyProfile = () => {
+    replaceNavLower({
+      isLoading: true
+    });
+
+    axios({
+      method: "GET",
+      url: '/api/my/profile',
+    }).then((resp) => {
+      replaceNavLower({
+        user: resp.data
+      })
+    }).catch(() => {
+      replaceNavLower();
+    })
+  }
+
+  const handleLogout = (e) => {
+    e.preventDefault();
+
+    axios({
+      method: 'DELETE',
+      url: '/api/auth/logout',
+    }).then(() => {
+      window.location.href = '/auth/login'
+    });
+
+  }
 
   $(document).ready(() => {
+    getMyProfile();
     highlightActivePage();
     // updateNavbar();
-
-
     $('#navbar-collapse').on('click', toggleNavBar);
+    $('#navbar').on('click', '#auth-logout', handleLogout)
   });
 </script>
 
@@ -53,23 +134,24 @@
       </a>
     </li>
   </ul>
-  <hr>
-  <div id="navbar-lower"></div>
-  <div class="dropdown">
-    <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-      <div class="avatar-wrapper">
-        <img src="/imgs/no-profile-picture-icon.png" class="rounded-circle me-2 avatar-small">
-        <strong>Jeremy</strong>
-      </div>
-    </a>
-    <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
+
+  <div id="navbar-lower">
+    <!-- <div class="dropdown hidden">
+      <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="avatar-wrapper">
+          <img src="/imgs/no-profile-picture-icon.png" class="rounded-circle me-2 avatar-small">
+          <strong></strong>
+        </div>
+      </a> -->
+    <!-- <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
       <li><a class="dropdown-item" href="#">Profile</a></li>
       <li>
         <hr class="dropdown-divider">
       </li>
       <li><a class="dropdown-item" href="#">Sign out</a></li>
-    </ul>
+    </ul> -->
   </div>
+</div>
 </div>
 
 

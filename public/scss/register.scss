@@ -1,0 +1,55 @@
+@import "./styles.scss";
+
+#pages-auth-register-wrapper {
+  display: flex;
+  flex-direction: column;
+  // justify-content: center;
+  align-items: center;
+  overflow-y: scroll;
+  width: 100vw;
+  background-color: $bg-ldark;
+
+  #register-header-wrapper {
+    background-color: $bg-primary;
+    border-radius: 10px;
+    min-width: 200px;
+    max-width: 250px;
+    margin-top: 7rem;
+    margin-bottom: 5rem;
+    padding: 5px;
+  }
+
+  #pages-auth-register {
+    background-color: $bg-primary;
+    min-width: 380px;
+    min-height: 600px;
+    max-width: 400px;
+
+    border-radius: 10px;
+    margin-bottom: 10rem;
+    .row {
+      // justify-content: space-around;
+      margin: 0;
+      padding-bottom: 20px;
+      #form-wrapper {
+        // background-color: yellow;
+        max-width: 380px;
+        flex-grow: 1;
+        #register-form {
+          display: flex;
+          flex-direction: column;
+          button[type="submit"] {
+            align-self: center;
+            max-width: 154px;
+            min-width: 134px;
+            margin-top: 10px;
+          }
+          button[type="submit"]:hover {
+            background-color: $bg-accent;
+            border-color: $bg-accent-border;
+          }
+        }
+      }
+    }
+  }
+}

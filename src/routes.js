@@ -2,6 +2,8 @@ import { Router } from "express";
 import { checkData } from "./_middlewares/check-data.js";
 import registrationSchema from "./schemas/registration.js";
 import loginSchema from "./schemas/login.js";
+import authenticateUser from "./_middlewares/authenticate-user.js";
+import updateProfile from "./schemas/update-profile.js";
 const router = Router();
 
 // API | AUTH
@@ -22,6 +24,20 @@ router.delete(
   (await import("./controllers/api/auth/logout.js")).default
 );
 
+// API | MY PROFILE | AUTH REQUIRED
+router.get(
+  "/api/my/profile",
+  authenticateUser("json"),
+  (await import("./controllers/api/my/profile/show.js")).default
+);
+
+router.put(
+  "/api/my/profile",
+  authenticateUser("json"),
+  checkData(updateProfile),
+  (await import("./controllers/api/my/profile/update.js")).default
+);
+
 // API | ARTICLES
 //index (also search/filter/pagination)
 router.get(
@@ -34,6 +50,8 @@ router.get(
 //   "/api/articles/:id",
 //   (await import("./controllers/api/articles/show.js")).default
 // );
+// API | NOT FOUND
+router.use("/api", (await import("./controllers/api/not-found.js")).default);
 
 // PAGES | ARTICLES
 router.get(
@@ -50,6 +68,11 @@ router.get(
 router.get(
   "/auth/register",
   (await import("./controllers/pages/auth/register.js")).default
+);
+
+router.get(
+  "/auth/login",
+  (await import("./controllers/pages/auth/login.js")).default
 );
 
 // PAGES | STATIC
