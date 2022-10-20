@@ -48,7 +48,8 @@ model Article {
   description        String?
   image              String?
   author             String?
-  source             String?
+  sourceName         String?
+  sourceURL          String?
   readingTime        Int?
   readingList        ReadingList[]
   tags               Tag[]

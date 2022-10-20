@@ -24,6 +24,7 @@
     "express": "^4.17.2",
     "express-compile-sass": "^4.0.0",
     "express-ejs-layouts": "^2.5.1",
+    "feed-reader": "^6.1.2",
     "formidable": "^2.0.1",
     "gnews": "^1.0.3",
     "iron-session": "^6.0.5",

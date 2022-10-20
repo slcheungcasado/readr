@@ -63,6 +63,7 @@ body {
 #navbar-expand-button-container {
   background-color: $bg-ldark;
   width: 0;
+  z-index: 1;
   button:hover {
     background-color: $bg-accent;
     border-color: $bg-accent-border;
@@ -77,4 +78,9 @@ body {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+
+#index-search-btn:hover {
+  background-color: $bg-accent;
+  border-color: $bg-accent-border;
 }

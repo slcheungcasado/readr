@@ -45,14 +45,65 @@
     const $title = generateTitle(info);
     const $articles = generateArticles(info);
 
-    $page.append($title).append($articles);
+    $page.html('').append($title).append($articles);
+  }
+
+  const getArticlesByFilter = async (e) => {
+    e.preventDefault();
+
+    console.log(e, e.target, e.currentTarget);
+    const $target = $(e.currentTarget);
+    const topic = $target.data('topic') || ''
+
+    if (!topic) return;
+    else if (topic == 'headlines') {
+      window.location.href = '/articles';
+    } else {
+      axios({
+        method: "GET",
+        url: `/api/articles/${topic}`
+      }).then((resp) => {
+        generatePage({
+          info: resp.data
+        });
+      }).catch((err) => {
+        console.error(err);
+        generatePage({
+          displayErr: true
+        });
+      });
+    }
   }
 
   $(document).ready(() => {
     getArticles();
+    $("#topic-filter").on('click', 'a.nav-link', getArticlesByFilter);
   });
 </script>
 
 
 <%- contentFor('body') %>
-<div id="pages-articles-index" class="container-fluid"></div>
+<div id="pages-articles-index-wrapper" class="container-fluid">
+  <div id="articles-search-section">
+    <div class="navbar searchbar">
+      <div class="container-fluid justify-content-end">
+        <form class="d-flex" role="search">
+          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+          <button id="index-search-btn" class="btn btn-secondary" type="submit">Search</button>
+        </form>
+      </div>
+    </div>
+    <ul id="topic-filter" class="nav justify-content-around">
+      <li class="nav-item"><a href="#" class="nav-link text-white active" aria-current="page" data-topic="headlines">Headlines</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="world">World</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="nation">Nation</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="business">Business</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="technology">Technology</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="entertainment">Entertainment</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="sports">Sports</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="science">Science</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="health">Health</a></li>
+    </ul>
+  </div>
+  <div id="pages-articles-index"></div>
+</div>

@@ -47,10 +47,11 @@ router.get(
 );
 
 //show
-// router.get(
-//   "/api/articles/:id",
-//   (await import("./controllers/api/articles/show.js")).default
-// );
+router.get(
+  "/api/articles/:topic",
+  (await import("./controllers/api/articles/show.js")).default
+);
+
 // API | NOT FOUND
 router.use("/api", (await import("./controllers/api/not-found.js")).default);
 

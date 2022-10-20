@@ -26,22 +26,52 @@ async function runArticleParser(dataToSave, { needHTML = false } = {}) {
   // }
 
   try {
-    const data = await extract(dataToSave.url, { wordsPerMinute: 250 });
-    if (!data) {
-      return dataToSave;
-    }
-    dataToSave.description = data?.description || "";
-    dataToSave.image = data?.image || "";
-    if (needHTML) dataToSave.content = data?.content || null;
-    dataToSave.author = data?.author || "";
-    dataToSave.source = data?.source || "";
-    dataToSave.readingTime = data?.ttr || 0;
+    const data = extract(dataToSave.url, { wordsPerMinute: 250 });
+    // if (!data) {
+    //   return dataToSave;
+    // }
+
+    // dataToSave.description = data?.description || "";
+    // dataToSave.image = data?.image || "";
+    // if (needHTML) dataToSave.content = data?.content || null;
+    // dataToSave.author = data?.author || "";
+    // if (!dataToSave?.sourceName && !dataToSave?.sourceURL) {
+    //   dataToSave.sourceName = data?.source;
+    // }
+    // dataToSave.readingTime = data?.ttr || 0;
+
+    let timeOutID = null;
+    const timeout = new Promise((resolve, reject) => {
+      timeOutID = setTimeout(() => {
+        resolve("timedOut");
+      }, 10000);
+    });
+
+    return Promise.race([data, timeout])
+      .then((value) => {
+        // console.log("value", value);
+        if (!value || value === "timedOut") {
+          return dataToSave;
+        }
+        clearTimeout(timeOutID);
+        dataToSave.description = value?.description || "";
+        dataToSave.image = value?.image || "";
+        if (needHTML) dataToSave.content = value?.content || null;
+        dataToSave.author = value?.author || "";
+        if (!dataToSave?.sourceName && !dataToSave?.sourceURL) {
+          dataToSave.sourceName = value?.source;
+        }
+        dataToSave.readingTime = value?.ttr || 0;
+        return dataToSave;
+      })
+      .catch((err) => {
+        console.log(err);
+        return dataToSave;
+      });
   } catch (err) {
-    // console.log("failed to parse", dataToSave.title);
-    // console.log("url", dataToSave.url);
+    console.log(err);
     return dataToSave;
   }
-  return dataToSave;
 }
 
 // function runReadability(doc, dataToSave) {
@@ -66,11 +96,15 @@ export async function cacheArticle(article) {
   // From GNews API Call
   let dataToSave = {
     title: article?.title,
-    url: article.link,
-    pubDate: new Date(article.pubDate),
-    relatedLinks: article.content,
+    url: article?.link,
+    pubDate: new Date(article?.pubDate),
+    relatedLinks: article?.content,
+    sourceName: article?.sourceName,
+    sourceURL: article?.sourceURL,
+    tags: article?.tags,
   };
 
+  // console.log("before runArticleParser");
   // Article Parsing (Preparing data for Prisma)
   dataToSave = await runArticleParser(dataToSave, {
     needHTML: true,
@@ -86,20 +120,28 @@ export async function cacheArticle(article) {
   //   description: "",
   //   image: "",
   //   author: "",
-  //   source: "",
+  //   sourceName: "",
+  //   sourceURL: "",
+  //   tags: [],
   //   readingTime: "",
   // };
 
   // Do prisma article create query
   try {
-    const articleObj = await prisma.article.create({ data: dataToSave });
+    const articleObj = await prisma.article.create({
+      data: dataToSave,
+      include: { tags: true },
+    });
     return articleObj;
   } catch (err) {
     // throw err;
     // console.log("Failed to write article, trying filteredData...");
     const filteredData = _.omit(dataToSave, fieldsToOmit);
     try {
-      const filteredObj = await prisma.article.create({ data: filteredData });
+      const filteredObj = await prisma.article.create({
+        data: filteredData,
+        include: { tags: true },
+      });
       return filteredObj;
     } catch (err) {
       console.log(err);
@@ -107,4 +149,5 @@ export async function cacheArticle(article) {
       return null;
     }
   }
+  return {};
 }
