@@ -10,14 +10,26 @@
         // url: '/api/my/subscriptions/devto'
         url: '/api/articles',
       });
-      console.log(resp);
+      // console.log(resp);
       generatePage({
-        articles: resp.data
+        articles: resp.data.articles,
+        meta: resp.data.meta,
       });
     } catch (err) {
       console.error(err);
     }
 
+  }
+
+  const shortenTitle = (title) => {
+    const end = title.lastIndexOf(' - ');
+    return (end > 0) ? title.slice(0, end) : title;
+  }
+
+  const generateTags = (article) => {
+    return (article?.tags?.length == 0) ? 'hello' : article?.tags.map(tag => {
+      return (tag?.name) ? `<small class="badge rounded-pill text-bg-secondary">${tag.name}</small>` : ''
+    }).join('');
   }
 
   const generateTitle = ({
@@ -26,8 +38,47 @@
     return `<h1 class="text-center">News Articles</h1>`;
   }
 
-  const generateCard = (article) => {
-
+  const generateArticle = (article) => {
+    var options = {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    };
+    return `
+    <div class="col">
+      <div class="card h-100">
+        <img src="${(article?.image)? article.image : "/imgs/olive-pfp.jpeg"}" class="card-img-top card-image" alt="card-image">
+        <div class="card-body text-dark">
+          <div class="card-source-info">
+            <strong class="article-source-name">
+              <a class="text-dark" href="${(article?.sourceURL)? article.sourceURL : " #"}">
+                ${(article?.sourceName)? article.sourceName : ""}
+              </a>
+            </strong>
+            <i class="article-author">${(article?.author)? article.author : ""}</i>
+            <small class="text-muted article-pubdate">${(article?.pubDate)? new Date(article.pubDate).toLocaleDateString("en-US", options) : ""}</small>
+          </div>
+          <div class="card-title-wrapper">
+            <h5 class="card-title">
+              <a class="text-dark" href="${(article?.url)? article.url : " #"}">
+                ${(article?.title)? shortenTitle(article.title) : "Card Title"}</a>
+            </h5>
+            <div class="card-tags-section">
+              ${generateTags(article)}
+            </div>
+          </div>
+          <p class="card-text line-clamp">${(article?.description)? article.description: ""}</p>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-outline-success" data-article-id="${(article?.id)? article.id : null}">
+            <i class="fas fa-bookmark"></i>
+            <span>Bookmark</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    `;
   }
 
   const generateArticles = ({
@@ -35,14 +86,19 @@
   } = {}) => {
     console.log("articles in generateArticles", articles);
     if (articles?.length > 0) {
-      generateCard(articles[0]);
+      return `
+      <div id="cards-section" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-4 g-4">
+        ${articles.map((art) => generateArticle(art)).join('')}
+      </div>
+      `;
     }
   }
 
   const generatePage = (info) => {
-    console.log("info", info?.articles?.article?.content);
+    // console.log("info", info?.articles?.article?.content);
     const $page = $("#pages-articles-index");
     const $title = generateTitle(info);
+    console.log('info before GenerateArticles', info);
     const $articles = generateArticles(info);
 
     $page.html('').append($title).append($articles);
@@ -51,7 +107,7 @@
   const getArticlesByFilter = async (e) => {
     e.preventDefault();
 
-    console.log(e, e.target, e.currentTarget);
+    // console.log(e, e.target, e.currentTarget);
     const $target = $(e.currentTarget);
     const topic = $target.data('topic') || ''
 
@@ -64,7 +120,8 @@
         url: `/api/articles/${topic}`
       }).then((resp) => {
         generatePage({
-          info: resp.data
+          articles: resp.data.articles,
+          meta: resp.data.meta
         });
       }).catch((err) => {
         console.error(err);
@@ -75,9 +132,15 @@
     }
   }
 
+  const ignoreBadLink = (e) => {
+    console.log(e.currentTarget);
+  }
+
+
   $(document).ready(() => {
     getArticles();
     $("#topic-filter").on('click', 'a.nav-link', getArticlesByFilter);
+    $("#pages-articles-index").on('click', '.card a', ignoreBadLink);
   });
 </script>
 
@@ -105,5 +168,5 @@
       <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="health">Health</a></li>
     </ul>
   </div>
-  <div id="pages-articles-index"></div>
+  <div id="pages-articles-index" class=""></div>
 </div>

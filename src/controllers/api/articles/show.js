@@ -41,8 +41,9 @@ export default async function (req, res) {
 
     // If you want to cache new articles
     if (doCache) {
+      // const startTime = new Date();
       const headlines = await neoGnews.topic(topic, { n: 100 });
-      // TODO: run this by Denis
+
       const promises = headlines.map((article) => {
         const url = new URL(article.link);
         article.link = url.origin + url.pathname;
@@ -54,10 +55,12 @@ export default async function (req, res) {
             };
           }),
         };
+
         return cacheIfNeeded(article);
       });
 
       articles = await Promise.all(promises);
+      // console.log("Benchmark", new Date() - startTime);
     } else {
       // Just fetch stored articles
       articles = await prisma.article.findMany({
@@ -70,11 +73,12 @@ export default async function (req, res) {
             },
           },
         },
+        include: {
+          tags: true,
+        },
         take,
       });
     }
-
-    // console.log(articles);
 
     return res.status(200).json({
       articles: articles.slice(skip, Math.min(take, articles.length)),

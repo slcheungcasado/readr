@@ -85,8 +85,3 @@ export const search = async (
     fillCountryLangParams(country.toUpperCase(), language.toLowerCase());
   return (await getRss(url)).items.slice(0, Math.max(0, n));
 };
-
-// exports.headlines = headlines;
-// exports.topic = topic;
-// exports.geo = geo;
-// exports.search = search;
