@@ -77,6 +77,9 @@ export default async function (req, res) {
           tags: true,
         },
         take,
+        orderBy: {
+          pubDate: "desc",
+        },
       });
     }
 

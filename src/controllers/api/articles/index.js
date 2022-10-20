@@ -62,6 +62,9 @@ export default async function (req, res) {
             tags: true,
           },
           take,
+          orderBy: {
+            pubDate: "desc",
+          },
         });
         console.log(`Found ${articles.length} articles`);
       } else {
@@ -79,6 +82,9 @@ export default async function (req, res) {
             tags: true,
           },
           take,
+          orderBy: {
+            pubDate: "desc",
+          },
         });
       }
     }

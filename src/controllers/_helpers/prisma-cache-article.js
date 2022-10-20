@@ -26,24 +26,42 @@ async function runArticleParser(dataToSave, { needHTML = false } = {}) {
   // }
 
   try {
-    const controller = new AbortController();
-    const timeoutID = setTimeout(() => controller.abort(), 5000);
-    const data = await extract(
-      dataToSave.url,
-      { wordsPerMinute: 250 },
-      { signal: controller.signal }
-    );
-    clearTimeout(timeoutID);
+    // const controller = new AbortController();
+    // const timeoutID = setTimeout(() => controller.abort(), 5000);
+    // const data = await extract(
+    //   dataToSave.url,
+    //   { wordsPerMinute: 250 },
+    //   { signal: controller.signal }
+    // );
+    // clearTimeout(timeoutID);
 
-    dataToSave.description = data?.description || "";
-    dataToSave.image = data?.image || "";
-    if (needHTML) dataToSave.content = data?.content || null;
-    dataToSave.author = data?.author || "";
-    if (!dataToSave?.sourceName && !dataToSave?.sourceURL) {
-      dataToSave.sourceName = data?.source;
-    }
-    dataToSave.readingTime = data?.ttr || 0;
-    return dataToSave;
+    let timeOutID = null;
+    const timeout = new Promise((resolve, reject) => {
+      timeOutID = setTimeout(() => {
+        resolve("timedOut");
+      }, 10000);
+    });
+
+    return Promise.race([data, timeout])
+      .then((value) => {
+        if (!value || value === "timedOut") {
+          return dataToSave;
+        }
+        clearTimeout(timeOutID);
+        dataToSave.description = value?.description || "";
+        dataToSave.image = value?.image || "";
+        if (needHTML) dataToSave.content = value?.content || null;
+        dataToSave.author = value?.author || "";
+        if (!dataToSave?.sourceName && !dataToSave?.sourceURL) {
+          dataToSave.sourceName = value?.source;
+        }
+        dataToSave.readingTime = value?.ttr || 0;
+        return dataToSave;
+      })
+      .catch((err) => {
+        console.log(err);
+        return dataToSave;
+      });
   } catch (err) {
     console.log(err);
     return dataToSave;

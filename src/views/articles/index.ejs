@@ -32,6 +32,12 @@
     }).join('');
   }
 
+  const secondsToHoursMinutes = (seconds) => {
+    const hours = Math.trunc(seconds / 3600);
+    const minutes = Math.trunc(seconds / 60) - (hours * 60);
+    return `${(hours > 0)? `${hours} hr`: ''}` + `${(minutes > 0)? `${minutes} min`: ''}`
+  }
+
   const generateTitle = ({
     info
   } = {}) => {
@@ -70,11 +76,14 @@
           </div>
           <p class="card-text line-clamp">${(article?.description)? article.description: ""}</p>
         </div>
-        <div class="card-actions">
-          <button class="btn btn-outline-success" data-article-id="${(article?.id)? article.id : null}">
-            <i class="fas fa-bookmark"></i>
-            <span>Bookmark</span>
-          </button>
+        <div class="card-bottom">
+          <div class="card-actions">
+            <button class="btn btn-outline-success" data-article-id="${(article?.id)? article.id : null}">
+              <i class="fas fa-bookmark"></i>
+              <span>Bookmark</span>
+            </button>
+          </div>
+          <span class="align-self-center px-2 text-muted"><small>${(article?.readingTime)? secondsToHoursMinutes(article.readingTime) : ''}</small></span>
         </div>
       </div>
     </div>
