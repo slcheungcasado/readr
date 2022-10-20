@@ -136,11 +136,34 @@
     console.log(e.currentTarget);
   }
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const queries = parseFormData(new FormData(e.currentTarget));
+    axios({
+      method: "GET",
+      url: "/api/articles",
+      params: {
+        ...queries
+      }
+    }).then((resp) => {
+      generatePage({
+        articles: resp.data.articles,
+        meta: resp.data.meta
+      });
+    }).catch((err) => {
+      console.error(err);
+      generatePage({
+        displayErr: true
+      });
+    });
+  }
+
 
   $(document).ready(() => {
     getArticles();
     $("#topic-filter").on('click', 'a.nav-link', getArticlesByFilter);
     $("#pages-articles-index").on('click', '.card a', ignoreBadLink);
+    $("#articles-search-section").on('submit', "#index-search-form", handleSearch);
   });
 </script>
 
@@ -150,8 +173,8 @@
   <div id="articles-search-section">
     <div class="navbar searchbar">
       <div class="container-fluid justify-content-end">
-        <form class="d-flex" role="search">
-          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+        <form id="index-search-form" class="d-flex" role="search">
+          <input name="q" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
           <button id="index-search-btn" class="btn btn-secondary" type="submit">Search</button>
         </form>
       </div>

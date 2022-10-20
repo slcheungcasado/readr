@@ -9,9 +9,9 @@ import prisma from "../../_helpers/prisma.js";
 
 export default async function (req, res) {
   try {
+    const { q = "" } = req.query;
     let { doCache = false } = req.query;
     doCache = !!doCache;
-
     // Filters (Not really possible directly, just specify different endpoints instead)
     // const q = req.query.q || "";
     // const orderBy = req.query.orderBy || "id";
@@ -43,21 +43,44 @@ export default async function (req, res) {
 
       articles = await Promise.all(promises);
     } else {
-      articles = await prisma.article.findMany({
-        where: {
-          tags: {
-            some: {
-              name: {
-                equals: topic,
+      if (q) {
+        articles = await prisma.article.findMany({
+          where: {
+            OR: [
+              {
+                title: { contains: q, mode: "insensitive" },
+              },
+              {
+                sourceName: { contains: q, mode: "insensitive" },
+              },
+              {
+                description: { contains: q, mode: "insensitive" },
+              },
+            ],
+          },
+          include: {
+            tags: true,
+          },
+          take,
+        });
+        console.log(`Found ${articles.length} articles`);
+      } else {
+        articles = await prisma.article.findMany({
+          where: {
+            tags: {
+              some: {
+                name: {
+                  equals: topic,
+                },
               },
             },
           },
-        },
-        include: {
-          tags: true,
-        },
-        take,
-      });
+          include: {
+            tags: true,
+          },
+          take,
+        });
+      }
     }
 
     // console.log(articles);
