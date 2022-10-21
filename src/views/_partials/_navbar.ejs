@@ -27,7 +27,7 @@
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
         <div class="nav-avatar-wrapper">
           <img src="${(user?.avatar)? user.avatar : '/imgs/no-profile-picture-icon.png'}" class="rounded-circle me-2 nav-avatar-small">
-          <strong class="line-clamp">${(user?.username)? user.username : 'N/A'}</strong>
+          <strong class="truncate">${(user?.username)? user.username : 'N/A'}</strong>
         </div>
       </a>
       <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
@@ -124,7 +124,7 @@
     <li class="nav-item">
       <a href="/" class="nav-link text-white">
         <i class="fas fa-list"></i>
-        <span>My Reading Lists</span>
+        <span>My Reading List</span>
       </a>
     </li>
     <li class="nav-item">

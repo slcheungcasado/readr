@@ -2,6 +2,7 @@ import { Router } from "express";
 import { checkData } from "./_middlewares/check-data.js";
 import registrationSchema from "./schemas/registration.js";
 import loginSchema from "./schemas/login.js";
+import createMyReadingListArticle from "./schemas/create-my-reading-list-article.js";
 import authenticateUser from "./_middlewares/authenticate-user.js";
 import updateProfile from "./schemas/update-profile.js";
 import alreadyLoggedIn from "./_middlewares/already-logged-in.js";
@@ -37,6 +38,14 @@ router.put(
   authenticateUser("json"),
   checkData(updateProfile),
   (await import("./controllers/api/my/profile/update.js")).default
+);
+
+// API | MY ARTICLES | AUTH REQUIRED
+router.post(
+  "/api/my/reading-list/articles",
+  authenticateUser("json"),
+  checkData(createMyReadingListArticle),
+  (await import("./controllers/api/my/reading-list/articles/create.js")).default
 );
 
 // API | ARTICLES

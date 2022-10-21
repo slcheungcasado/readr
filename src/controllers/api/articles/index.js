@@ -10,6 +10,8 @@ import _ from "lodash";
 
 export default async function (req, res) {
   try {
+    const userId = req?.session?.user?.id;
+    console.log("req?.session?.user?.id", req?.session?.user?.id);
     const { q = "" } = req.query;
     let { doCache = false } = req.query;
     doCache = !!doCache;
@@ -108,6 +110,7 @@ export default async function (req, res) {
         currentPage: page,
         totalPages: Math.ceil(matchedRecords / take),
         // numArticles: matchedRecords,
+        userId,
       },
     });
   } catch (err) {

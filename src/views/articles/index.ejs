@@ -47,13 +47,14 @@
     return `<h1 class="text-center">News Articles</h1>`;
   }
 
-  const generateArticle = (article) => {
+  const generateArticle = (article, meta) => {
     var options = {
       weekday: 'short',
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     };
+    console.log('generateArticle meta', meta)
     return `
     <div class="col">
       <div class="card h-100">
@@ -81,10 +82,14 @@
         </div>
         <div class="card-bottom">
           <div class="card-actions">
-            <button class="btn btn-outline-success" data-article-id="${(article?.id)? article.id : null}">
-              <i class="fas fa-bookmark"></i>
-              <span>Bookmark</span>
-            </button>
+            ${(meta?.userId)?
+              `<button class="btn btn-outline-success" data-article-id="${(article?.id)? article.id : null}">
+                <i class="fas fa-bookmark"></i>
+                <span>Bookmark</span>
+              </button>`
+              :
+              ''
+            }
           </div>
           <span class="align-self-center px-2 text-muted"><small>${(article?.readingTime)? secondsToHoursMinutes(article.readingTime) : ''}</small></span>
         </div>
@@ -94,13 +99,14 @@
   }
 
   const generateArticles = ({
-    articles
+    articles,
+    meta
   } = {}) => {
     console.log("articles in generateArticles", articles);
     if (articles?.length > 0) {
       return `
       <div id="cards-section" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-4 g-4">
-        ${articles.map((art) => generateArticle(art)).join('')}
+        ${articles.map((art) => generateArticle(art, meta)).join('')}
       </div>
       `;
     }
@@ -280,6 +286,26 @@
     });
   }
 
+  const handleBookmarkArticle = (e) => {
+    e.preventDefault();
+    console.log("handleBookmarkArticle called");
+    console.log(e.currentTarget, e.$target);
+    const articleId = $(e.currentTarget).data('article-id');
+
+    axios({
+      method: 'POST',
+      url: '/api/my/reading-list/articles',
+      data: {
+        articleId
+      }
+    }).then((resp) => {
+
+    }).catch((err) => {
+
+    }).finally(() => {
+
+    });
+  }
 
   $(document).ready(() => {
     getArticles();
@@ -287,6 +313,7 @@
     $("#pages-articles-index").on('click', '.card a', ignoreBadLink);
     $("#articles-search-section").on('submit', "#index-search-form", handleSearch);
     $("#pages-articles-index").on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
+    $("#pages-articles-index").on('click', 'div.card-actions button[data-article-id]', handleBookmarkArticle);
   });
 </script>
 

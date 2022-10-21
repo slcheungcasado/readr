@@ -23,6 +23,11 @@ export default async function (req, res) {
       dataToSave.avatar = verifiedData.avatar;
     }
 
+    //every user should have one reading list by default
+    dataToSave.readingList = {
+      create: { title: "My List" },
+    };
+
     const newUser = await prisma.user.create({
       data: dataToSave,
       include: {
