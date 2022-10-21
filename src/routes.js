@@ -2,10 +2,12 @@ import { Router } from "express";
 import { checkData } from "./_middlewares/check-data.js";
 import registrationSchema from "./schemas/registration.js";
 import loginSchema from "./schemas/login.js";
-import createMyReadingListArticle from "./schemas/create-my-reading-list-article.js";
+import addToReadingList from "./schemas/add-to-reading-list.js";
+import removeFromReadingList from "./schemas/remove-from-reading-list.js";
 import authenticateUser from "./_middlewares/authenticate-user.js";
 import updateProfile from "./schemas/update-profile.js";
 import alreadyLoggedIn from "./_middlewares/already-logged-in.js";
+import checkOwnership from "./_middlewares/_check_ownership.js";
 const router = Router();
 
 // API | AUTH
@@ -44,8 +46,17 @@ router.put(
 router.post(
   "/api/my/reading-list/articles",
   authenticateUser("json"),
-  checkData(createMyReadingListArticle),
+  checkData(addToReadingList),
   (await import("./controllers/api/my/reading-list/articles/create.js")).default
+);
+
+router.delete(
+  "/api/my/reading-list/articles",
+  authenticateUser("json"),
+  checkData(removeFromReadingList),
+  checkOwnership,
+  (await import("./controllers/api/my/reading-list/articles/destroy.js"))
+    .default
 );
 
 // API | ARTICLES

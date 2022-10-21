@@ -286,11 +286,25 @@
     });
   }
 
+  const toggleButtonType = ($button) => {
+    if ($button.hasClass('btn-outline-success')) {
+      $button.removeClass('btn-outline-success');
+      $button.addClass('btn-outline-danger');
+      $button.find('span').text('Remove Bookmark');
+    } else {
+      $button.removeClass('btn-outline-danger');
+      $button.addClass('btn-outline-success');
+      $button.find('span').text('Bookmark');
+    }
+  }
+
   const handleBookmarkArticle = (e) => {
     e.preventDefault();
-    console.log("handleBookmarkArticle called");
-    console.log(e.currentTarget, e.$target);
-    const articleId = $(e.currentTarget).data('article-id');
+    toggleLoadOverLay();
+    // console.log("handleBookmarkArticle called");
+    // console.log(e.currentTarget, e.$target);
+    const $button = $(e.currentTarget)
+    const articleId = $button.data('article-id');
 
     axios({
       method: 'POST',
@@ -299,13 +313,48 @@
         articleId
       }
     }).then((resp) => {
-
+      toggleButtonType($button)
     }).catch((err) => {
-
+      console.error(err);
+      generatePage({
+        displayErr: true
+      });
     }).finally(() => {
-
+      toggleLoadOverLay();
     });
   }
+
+
+  const handleRemoveBookmark = (e) => {
+    e.preventDefault();
+    toggleLoadOverLay();
+    // console.log("handleRemoveBookmark called");
+    // console.log(e.currentTarget, e.$target);
+    const $button = $(e.currentTarget)
+    const articleId = $button.data('article-id');
+
+    axios({
+      method: 'DELETE',
+      url: '/api/my/reading-list/articles',
+      data: {
+        articleId
+      }
+    }).then((resp) => {
+      // generatePage({
+      // articles: resp.data.articles,
+      // meta: resp.data.meta
+      // });
+      toggleButtonType($button);
+    }).catch((err) => {
+      console.error(err);
+      generatePage({
+        displayErr: true
+      });
+    }).finally(() => {
+      toggleLoadOverLay();
+    });
+  }
+
 
   $(document).ready(() => {
     getArticles();
@@ -313,7 +362,8 @@
     $("#pages-articles-index").on('click', '.card a', ignoreBadLink);
     $("#articles-search-section").on('submit', "#index-search-form", handleSearch);
     $("#pages-articles-index").on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
-    $("#pages-articles-index").on('click', 'div.card-actions button[data-article-id]', handleBookmarkArticle);
+    $("#pages-articles-index").on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);
+    $("#pages-articles-index").on('click', 'div.card-actions button.btn-outline-danger[data-article-id]', handleRemoveBookmark);
   });
 </script>
 

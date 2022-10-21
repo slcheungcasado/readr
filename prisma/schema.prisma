@@ -36,6 +36,8 @@ model ReadingListArticle {
   articleId     Int
   tags          Tag[]
   createdAt     DateTime    @default(now())
+
+  @@unique([readingListId, articleId])
 }
 
 model Article {
