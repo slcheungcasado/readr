@@ -3,6 +3,7 @@ import handleErrors from "../../_helpers/handle-errors.js";
 import prisma from "../../_helpers/prisma.js";
 import * as neoGnews from "../../_helpers/neo-gnews.js";
 import { cacheIfNeeded } from "../../_helpers/prisma-is-cached.js";
+import _ from "lodash";
 
 const TOPICS = [
   "WORLD",
@@ -32,12 +33,17 @@ export default async function (req, res) {
       }
     }
 
+    console.log("This is topic in params", topic);
+    console.log("This is page in params", req.query.page);
+
     doCache = !!doCache;
     // Pagination
     const take = 10;
     const page = Number(req.query.page || "1");
     const skip = (page - 1) * take;
     let articles = [];
+    let prismaQuery = {};
+    let matchedRecords = 0;
 
     // If you want to cache new articles
     if (doCache) {
@@ -60,10 +66,11 @@ export default async function (req, res) {
       });
 
       articles = await Promise.all(promises);
+      matchedRecords = articles.length;
       // console.log("Benchmark", new Date() - startTime);
     } else {
       // Just fetch stored articles
-      articles = await prisma.article.findMany({
+      prismaQuery = {
         where: {
           tags: {
             some: {
@@ -76,18 +83,23 @@ export default async function (req, res) {
         include: {
           tags: true,
         },
+        skip,
         take,
         orderBy: {
           pubDate: "desc",
         },
-      });
+      };
+      articles = await prisma.article.findMany(prismaQuery);
+      matchedRecords = await prisma.article.count(
+        _.omit(prismaQuery, ["include", "skip", "take", "orderBy"])
+      );
     }
 
     return res.status(200).json({
-      articles: articles.slice(skip, Math.min(take, articles.length)),
+      articles: articles,
       meta: {
         currentPage: page,
-        totalPages: Math.ceil(articles.length / take),
+        totalPages: Math.ceil(matchedRecords / take),
       },
     });
   } catch (err) {

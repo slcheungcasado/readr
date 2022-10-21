@@ -106,22 +106,62 @@
     }
   }
 
+  const generatePagination = (info = {}) => {
+    if (!info?.meta) return ''
+    const {
+      currentPage,
+      totalPages
+    } = info.meta;
+    console.log("This happens before", currentPage, totalPages);
+    if ($(".load-overlay").hasClass('visually-hidden')) return '';
+    console.log("This happens", currentPage, totalPages);
+
+    let links = ''
+    if (totalPages > 2 && currentPage > 1) links += `<li class="page-item"><a class="page-link" href="#" data-page="1">First</a></li>`
+    if (currentPage - 1 >= 1) links += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage - 1}">Prev</a></li>`
+    if (currentPage - 2 >= 1) links += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage - 2}">${currentPage - 2}</a></li>`
+    if (currentPage - 1 >= 1) links += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage - 1}">${currentPage - 1}</a></li>`
+    links += `<li class="page-item active"><a class="page-link">${currentPage}</a></li>`
+    if (currentPage + 1 <= totalPages) links += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage + 1}">${currentPage + 1}</a></li>`
+    if (currentPage + 2 <= totalPages) links += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage + 2}">${currentPage + 2}</a></li>`
+    if (currentPage + 1 <= totalPages) links += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage + 1}">Next</a></li>`
+    if (totalPages > 2 && currentPage < totalPages)
+      links += `<li class="page-item"><a class="page-link" href="#" data-page="${totalPages}">Last</a></li>`
+    return `
+          <ul class="pagination justify-content-center mt-3">
+            ${links}
+          </ul>
+          `
+  }
+
+
   const generatePage = (info) => {
     // console.log("info", info?.articles?.article?.content);
     const $page = $("#pages-articles-index");
     const $title = generateTitle(info);
     console.log('info before GenerateArticles', info);
     const $articles = generateArticles(info);
+    const $pagination = generatePagination(info);
+    console.log("$pagination", $pagination);
 
-    $page.html('').append($title).append($articles);
+    $page.html('').append($title).append($articles).append($pagination);
   }
 
   const getArticlesByFilter = async (e) => {
     e.preventDefault();
     toggleLoadOverLay();
+
+    //clear value in search bar so pagination works
+    //on the topic and not the search result value
+    $("#index-search-form").trigger("reset");
+
     // console.log(e, e.target, e.currentTarget);
     const $target = $(e.currentTarget);
-    const topic = $target.data('topic') || ''
+    const $parentContainer = $('#topic-filter');
+    $parentContainer.find('.nav-item a.nav-link').removeAttr('aria-current').removeClass('active-topic');
+    $target.attr('aria-current', 'page').addClass('active-topic');
+
+    const topic = $target.data('topic') || '';
 
     if (!topic) return;
     else if (topic == 'headlines') {
@@ -148,6 +188,71 @@
 
   const ignoreBadLink = (e) => {
     console.log(e.currentTarget);
+  }
+
+  const handlePageChange = (e) => {
+    e.preventDefault();
+    console.log("handlePageChange called");
+    toggleLoadOverLay();
+
+    /*
+    assumption: if search bar has content, then pagination is for that search
+    otherwise, the pagination is for whichever is the active topic
+    */
+
+    const query = parseFormData(new FormData($('#index-search-form')[0]));
+    const page = $(e.currentTarget).data('page');
+
+    if (query?.q) {
+      //do pagination for search result
+      axios({
+        method: 'GET',
+        url: '/api/articles',
+        params: {
+          page,
+          ...query
+        }
+      }).then((resp) => {
+        generatePage({
+          articles: resp.data.articles,
+          meta: resp.data.meta
+        });
+      }).catch((err) => {
+        console.error(err);
+        generatePage({
+          displayErr: true
+        });
+      }).finally(() => {
+        toggleLoadOverLay();
+      });
+    } else {
+      //do pagination for current active topic
+
+      let topic = $('a.active-topic').data('topic');
+      url = (topic == 'headlines') ? '/api/articles' : `/api/articles/${topic}`;
+      //get current topic
+      axios({
+        method: 'GET',
+        url,
+        params: {
+          page,
+          topic
+        }
+      }).then((resp) => {
+        generatePage({
+          articles: resp.data.articles,
+          meta: resp.data.meta
+        });
+      }).catch((err) => {
+        console.error(err);
+        generatePage({
+          displayErr: true
+        });
+      }).finally(() => {
+        toggleLoadOverLay();
+      });
+    }
+
   }
 
   const handleSearch = (e) => {
@@ -181,6 +286,7 @@
     $("#topic-filter").on('click', 'a.nav-link', getArticlesByFilter);
     $("#pages-articles-index").on('click', '.card a', ignoreBadLink);
     $("#articles-search-section").on('submit', "#index-search-form", handleSearch);
+    $("#pages-articles-index").on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
   });
 </script>
 
@@ -197,7 +303,7 @@
       </div>
     </div>
     <ul id="topic-filter" class="nav justify-content-around">
-      <li class="nav-item"><a href="#" class="nav-link text-white active" aria-current="page" data-topic="headlines">Headlines</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white active-topic" aria-current="page" data-topic="headlines">Headlines</a></li>
       <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="world">World</a></li>
       <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="nation">Nation</a></li>
       <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="business">Business</a></li>

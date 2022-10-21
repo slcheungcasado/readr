@@ -6,6 +6,7 @@ import * as neoGnews from "../../_helpers/neo-gnews.js";
 import { cacheIfNeeded } from "../../_helpers/prisma-is-cached.js";
 
 import prisma from "../../_helpers/prisma.js";
+import _ from "lodash";
 
 export default async function (req, res) {
   try {
@@ -21,8 +22,11 @@ export default async function (req, res) {
     const take = 10;
     const page = Number(req.query.page || "1");
     const skip = (page - 1) * take;
+
+    let matchedRecords = 0;
     let articles = [];
     let topic = "HEADLINE";
+    let prismaQuery = {};
 
     // If you want to cache new articles
     if (doCache) {
@@ -42,9 +46,10 @@ export default async function (req, res) {
       });
 
       articles = await Promise.all(promises);
+      matchedRecords = articles.length;
     } else {
       if (q) {
-        articles = await prisma.article.findMany({
+        prismaQuery = {
           where: {
             OR: [
               {
@@ -61,14 +66,14 @@ export default async function (req, res) {
           include: {
             tags: true,
           },
+          skip,
           take,
           orderBy: {
             pubDate: "desc",
           },
-        });
-        console.log(`Found ${articles.length} articles`);
+        };
       } else {
-        articles = await prisma.article.findMany({
+        prismaQuery = {
           where: {
             tags: {
               some: {
@@ -81,21 +86,28 @@ export default async function (req, res) {
           include: {
             tags: true,
           },
+          skip,
           take,
           orderBy: {
             pubDate: "desc",
           },
-        });
+        };
       }
+      articles = await prisma.article.findMany(prismaQuery);
+      matchedRecords = await prisma.article.count(
+        _.omit(prismaQuery, ["skip", "take", "include", "orderBy"])
+      );
+      console.log(`Found ${articles.length} articles`);
     }
 
     // console.log(articles);
 
     return res.status(200).json({
-      articles: articles.slice(skip, Math.min(take, articles.length)),
+      articles: articles,
       meta: {
         currentPage: page,
-        totalPages: Math.ceil(articles.length / take),
+        totalPages: Math.ceil(matchedRecords / take),
+        // numArticles: matchedRecords,
       },
     });
   } catch (err) {
