@@ -18,6 +18,7 @@ const TOPICS = [
 
 export default async function (req, res) {
   try {
+    const userId = req?.session?.user?.id;
     let { topic } = req.params;
     let { doCache = false } = req.query;
 
@@ -33,8 +34,8 @@ export default async function (req, res) {
       }
     }
 
-    console.log("This is topic in params", topic);
-    console.log("This is page in params", req.query.page);
+    // console.log("This is topic in params", topic);
+    // console.log("This is page in params", req.query.page);
 
     doCache = !!doCache;
     // Pagination
@@ -70,12 +71,23 @@ export default async function (req, res) {
       // console.log("Benchmark", new Date() - startTime);
     } else {
       // Just fetch stored articles
-      prismaQuery = {
+      const whereQuery = {
+        tags: {
+          some: {
+            name: {
+              equals: topic,
+            },
+          },
+        },
+      };
+
+      const prismaQuery = {
         where: {
-          tags: {
-            some: {
-              name: {
-                equals: topic,
+          ...whereQuery,
+          readingListArticle: {
+            none: {
+              readingList: {
+                userId,
               },
             },
           },
@@ -90,9 +102,7 @@ export default async function (req, res) {
         },
       };
       articles = await prisma.article.findMany(prismaQuery);
-      matchedRecords = await prisma.article.count(
-        _.omit(prismaQuery, ["include", "skip", "take", "orderBy"])
-      );
+      matchedRecords = await prisma.article.count({ where: { ...whereQuery } });
     }
 
     return res.status(200).json({
@@ -100,6 +110,7 @@ export default async function (req, res) {
       meta: {
         currentPage: page,
         totalPages: Math.ceil(matchedRecords / take),
+        userId,
       },
     });
   } catch (err) {

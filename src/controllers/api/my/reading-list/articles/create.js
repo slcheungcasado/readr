@@ -8,7 +8,7 @@ export default async function (req, res) {
     const userId = req.session.user.id;
 
     //get current user's reading list
-    const userReadingList = await prisma.user.findFirst({
+    const user = await prisma.user.findFirst({
       where: {
         id: userId,
       },
@@ -17,12 +17,43 @@ export default async function (req, res) {
       },
     });
 
-    console.log(userReadingList);
+    // console.log("user", user);
 
-    const dataToSave = {};
-    //create readinglistarticle
-    // const createdArticle = await prisma.readingListArticle;
-    return res.json(200).json({});
+    const article = await prisma.article.findFirst({
+      where: {
+        id: articleId,
+      },
+      include: {
+        tags: true,
+      },
+    });
+
+    // console.log("article", article);
+
+    const dataToSave = {
+      readingList: { connect: { id: user.readingList.id } },
+      article: { connect: { id: Number(article.id) } },
+      tags: {
+        connect: article.tags.map((t) => {
+          return {
+            name: t.name,
+          };
+        }),
+      },
+    };
+
+    // console.log("dataToSave", dataToSave);
+    // for (const [k, v] of Object.entries(dataToSave)) {
+    //   console.log(k, v);
+    // }
+
+    const createdArticle = await prisma.readingListArticle.create({
+      data: dataToSave,
+    });
+
+    return res.status(200).json({
+      article: createdArticle,
+    });
   } catch (err) {
     return handleErrors(res, err);
   }

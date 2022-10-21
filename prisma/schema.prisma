@@ -24,7 +24,7 @@ model ReadingList {
   title              String               @default("My List")
   user               User                 @relation(fields: [userId], references: [id])
   userId             Int                  @unique
-  articles           Article[]
+  // articles           Article[]
   readingListArticle ReadingListArticle[]
 }
 
@@ -51,7 +51,7 @@ model Article {
   sourceName         String?
   sourceURL          String?
   readingTime        Int?
-  readingList        ReadingList[]
+  // readingList        ReadingList[]
   tags               Tag[]
   readingListArticle ReadingListArticle[]
 }

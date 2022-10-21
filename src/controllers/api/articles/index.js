@@ -6,12 +6,10 @@ import * as neoGnews from "../../_helpers/neo-gnews.js";
 import { cacheIfNeeded } from "../../_helpers/prisma-is-cached.js";
 
 import prisma from "../../_helpers/prisma.js";
-import _ from "lodash";
 
 export default async function (req, res) {
   try {
     const userId = req?.session?.user?.id;
-    console.log("req?.session?.user?.id", req?.session?.user?.id);
     const { q = "" } = req.query;
     let { doCache = false } = req.query;
     doCache = !!doCache;
@@ -28,7 +26,6 @@ export default async function (req, res) {
     let matchedRecords = 0;
     let articles = [];
     let topic = "HEADLINE";
-    let prismaQuery = {};
 
     // If you want to cache new articles
     if (doCache) {
@@ -50,9 +47,8 @@ export default async function (req, res) {
       articles = await Promise.all(promises);
       matchedRecords = articles.length;
     } else {
-      if (q) {
-        prismaQuery = {
-          where: {
+      const whereQuery = q
+        ? {
             OR: [
               {
                 title: { contains: q, mode: "insensitive" },
@@ -64,19 +60,8 @@ export default async function (req, res) {
                 description: { contains: q, mode: "insensitive" },
               },
             ],
-          },
-          include: {
-            tags: true,
-          },
-          skip,
-          take,
-          orderBy: {
-            pubDate: "desc",
-          },
-        };
-      } else {
-        prismaQuery = {
-          where: {
+          }
+        : {
             tags: {
               some: {
                 name: {
@@ -84,26 +69,32 @@ export default async function (req, res) {
                 },
               },
             },
+          };
+      const prismaQuery = {
+        where: {
+          ...whereQuery,
+          readingListArticle: {
+            none: {
+              readingList: {
+                userId,
+              },
+            },
           },
-          include: {
-            tags: true,
-          },
-          skip,
-          take,
-          orderBy: {
-            pubDate: "desc",
-          },
-        };
-      }
+        },
+        include: {
+          tags: true,
+        },
+        skip,
+        take,
+        orderBy: {
+          pubDate: "desc",
+        },
+      };
       articles = await prisma.article.findMany(prismaQuery);
-      matchedRecords = await prisma.article.count(
-        _.omit(prismaQuery, ["skip", "take", "include", "orderBy"])
-      );
-      console.log(`Found ${articles.length} articles`);
+      matchedRecords = await prisma.article.count({ where: { ...whereQuery } });
     }
 
-    // console.log(articles);
-
+    console.log(`Found ${articles.length} articles`);
     return res.status(200).json({
       articles: articles,
       meta: {
