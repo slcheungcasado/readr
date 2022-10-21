@@ -2,6 +2,7 @@
 <%- contentFor('scripts') %>
 <script>
   const getArticles = async () => {
+    toggleLoadOverLay();
     console.log("Fetching articles...");
     try {
       const resp = await axios({
@@ -17,6 +18,8 @@
       });
     } catch (err) {
       console.error(err);
+    } finally {
+      toggleLoadOverLay();
     }
 
   }
@@ -115,7 +118,7 @@
 
   const getArticlesByFilter = async (e) => {
     e.preventDefault();
-
+    toggleLoadOverLay();
     // console.log(e, e.target, e.currentTarget);
     const $target = $(e.currentTarget);
     const topic = $target.data('topic') || ''
@@ -137,6 +140,8 @@
         generatePage({
           displayErr: true
         });
+      }).finally(() => {
+        toggleLoadOverLay();
       });
     }
   }
@@ -147,6 +152,7 @@
 
   const handleSearch = (e) => {
     e.preventDefault();
+    toggleLoadOverLay();
     const queries = parseFormData(new FormData(e.currentTarget));
     axios({
       method: "GET",
@@ -164,6 +170,8 @@
       generatePage({
         displayErr: true
       });
+    }).finally(() => {
+      toggleLoadOverLay();
     });
   }
 

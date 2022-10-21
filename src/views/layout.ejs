@@ -27,12 +27,47 @@
 
       return parsed
     }
+
+    const toggleLoadOverLay = (e) => {
+      console.log('This happens');
+      $(".loading-overlay").toggleClass('visually-hidden');
+    }
+
+    $(document).ready(() => {
+      // $('form').on('submit', toggleLoadOverLay);
+    })
   </script>
   <%- scripts %>
 </head>
 
 <body>
   <section class="app">
+    <div class="loading-overlay visually-hidden">
+      <div class="spinner-grow text-light m-2" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div class="spinner-grow text-light m-2" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div class="spinner-grow text-light m-2" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div class="spinner-grow text-light m-2" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div class="spinner-grow text-light m-2" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div class="spinner-grow text-light m-2" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div class="spinner-grow text-light m-2" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div class="spinner-grow text-light m-2" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
     <%- include('./_partials/_navbar.ejs') %>
     <%- body %>
   </section>
