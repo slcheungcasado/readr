@@ -43,6 +43,12 @@ router.put(
 );
 
 // API | MY ARTICLES | AUTH REQUIRED
+router.get(
+  "/api/my/reading-list",
+  authenticateUser("json"),
+  (await import("./controllers/api/my/reading-list/articles/index.js")).default
+);
+
 router.post(
   "/api/my/reading-list/articles",
   authenticateUser("json"),
@@ -93,6 +99,13 @@ router.get(
   "/my/profile",
   authenticateUser("html"),
   (await import("./controllers/pages/my/profile/update.js")).default
+);
+
+// PAGES | MY ARTICLES | AUTH REQUIRED
+router.get(
+  "/my/reading-list",
+  (await import("./controllers/pages/my/reading-list/articles/index.js"))
+    .default
 );
 
 // PAGES | ARTICLES

@@ -3,7 +3,7 @@
 <script>
   const getArticles = async () => {
     toggleLoadOverLay();
-    console.log("Fetching articles...");
+    // console.log("Fetching articles...");
     try {
       const resp = await axios({
         method: 'GET',
@@ -54,7 +54,7 @@
       month: 'short',
       day: 'numeric'
     };
-    console.log('generateArticle meta', meta)
+    // console.log('generateArticle meta', meta)
     return `
     <div class="col">
       <div class="card h-100">
@@ -102,7 +102,7 @@
     articles,
     meta
   } = {}) => {
-    console.log("articles in generateArticles", articles);
+    // console.log("articles in generateArticles", articles);
     if (articles?.length > 0) {
       return `
       <div id="cards-section" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-4 g-4">
@@ -118,9 +118,9 @@
       currentPage,
       totalPages
     } = info.meta;
-    console.log("This happens before", currentPage, totalPages);
+    // console.log("This happens before", currentPage, totalPages);
     if ($(".load-overlay").hasClass('visually-hidden')) return '';
-    console.log("This happens", currentPage, totalPages);
+    // console.log("This happens", currentPage, totalPages);
 
     let links = ''
     if (totalPages > 2 && currentPage > 1) links += `<li class="page-item"><a class="page-link" href="#" data-page="1">First</a></li>`
@@ -145,10 +145,10 @@
     // console.log("info", info?.articles?.article?.content);
     const $page = $("#pages-articles-index");
     const $title = generateTitle(info);
-    console.log('info before GenerateArticles', info);
+    // console.log('info before GenerateArticles', info);
     const $articles = generateArticles(info);
     const $pagination = generatePagination(info);
-    console.log("$pagination", $pagination);
+    // console.log("$pagination", $pagination);
 
     $page.html('').append($title).append($articles).append($pagination);
   }
@@ -192,13 +192,13 @@
     }
   }
 
-  const ignoreBadLink = (e) => {
-    console.log(e.currentTarget);
-  }
+  // const ignoreBadLink = (e) => {
+  //   console.log(e.currentTarget);
+  // }
 
   const handlePageChange = (e) => {
     e.preventDefault();
-    console.log("handlePageChange called");
+    // console.log("handlePageChange called");
     toggleLoadOverLay();
 
     /*
@@ -359,7 +359,7 @@
   $(document).ready(() => {
     getArticles();
     $("#topic-filter").on('click', 'a.nav-link', getArticlesByFilter);
-    $("#pages-articles-index").on('click', '.card a', ignoreBadLink);
+    // $("#pages-articles-index").on('click', '.card a', ignoreBadLink);
     $("#articles-search-section").on('submit', "#index-search-form", handleSearch);
     $("#pages-articles-index").on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
     $("#pages-articles-index").on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);

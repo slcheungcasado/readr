@@ -1,3 +1,3 @@
 export default async function (req, res) {
-  return res.render("my/articles/index");
+  return res.render("my/reading-list/articles/index");
 }

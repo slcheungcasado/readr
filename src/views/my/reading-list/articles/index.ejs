@@ -1,4 +1,396 @@
 <%- contentFor('styles') %>
 <%- contentFor('scripts') %>
+<script>
+  const getOwnArticles = () => {
+    console.log("Fetching own-articles...");
+    toggleLoadOverLay();
+    axios({
+      method: 'GET',
+      // url: 'https://dev.to/api/articles',
+      // url: '/api/my/subscriptions/devto'
+      url: '/api/my/reading-list',
+    }).then((resp) => {
+      // console.log(resp);
+      generatePage({
+        articles: resp.data.articles,
+        meta: resp.data.meta,
+      });
+    }).catch((err) => {
+      console.error(err);
+    }).finally(() => {
+      toggleLoadOverLay();
+    });
+  }
+
+  const shortenTitle = (title) => {
+    const end = title.lastIndexOf(' - ');
+    return (end > 0) ? title.slice(0, end) : title;
+  }
+
+  const generateTags = (article) => {
+    return (article?.tags?.length == 0) ? 'hello' : article?.tags.map(tag => {
+      return (tag?.name) ? `<small class="badge rounded-pill text-bg-secondary">${tag.name}</small>` : ''
+    }).join('');
+  }
+
+  const secondsToHoursMinutes = (seconds) => {
+    const hours = Math.trunc(seconds / 3600);
+    const minutes = Math.trunc(seconds / 60) - (hours * 60);
+    return `${(hours > 0)? `${hours} hr`: ''} ` + `${(minutes > 0)? `${minutes} min`: ''}`
+  }
+
+  const generateTitle = ({
+    info
+  } = {}) => {
+    return `<h1 class="text-center">News Articles</h1>`;
+  }
+
+  const generateArticle = (readingListArticle, meta) => {
+    var options = {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    };
+    console.log('generateArticle readingListArticle', readingListArticle);
+    console.log('generateArticle meta', meta);
+    const userTags = readingListArticle?.article?.tags || [];
+    article = readingListArticle?.article || {};
+    return `
+    <div class="col">
+      <div class="card h-100">
+        <img src="${(article?.image)? article.image : "/imgs/olive-pfp.jpeg"}" class="card-img-top card-image" alt="card-image">
+        <div class="card-body text-dark">
+          <div class="card-source-info">
+            <strong class="article-source-name">
+              <a class="text-dark" href="${(article?.sourceURL)? article.sourceURL : " #"}">
+                ${(article?.sourceName)? article.sourceName : ""}
+              </a>
+            </strong>
+            <i class="article-author">${(article?.author)? article.author : ""}</i>
+            <small class="text-muted article-pubdate">${(article?.pubDate)? new Date(article.pubDate).toLocaleDateString("en-US", options) : ""}</small>
+          </div>
+          <div class="card-title-wrapper">
+            <h5 class="card-title">
+              <a class="text-dark" href="${(article?.url)? article.url : " #"}">
+                ${(article?.title)? shortenTitle(article.title) : "Card Title"}</a>
+            </h5>
+            <div class="card-tags-section">
+              ${generateTags(article)}
+            </div>
+          </div>
+          <p class="card-text line-clamp">${(article?.description)? article.description: ""}</p>
+        </div>
+        <div class="card-bottom-readinglist">
+          <div class="card-actions">
+            <button class="btn btn-outline-danger" data-article-id="${(readingListArticle?.id)? readingListArticle.id : null}">
+              <i class="fas fa-bookmark"></i>
+              <span>Remove Bookmark</span>
+            </button>
+            <button class="btn btn-outline-secondary" data-article-id="${(readingListArticle?.id)? readingListArticle.id : null}">
+              <i class="fas fa-eye"></i>
+              <span>Read <small>${(article?.readingTime)? '(' + secondsToHoursMinutes(article.readingTime) + ')' : ''}</small></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    `;
+  }
+
+  const generateArticles = ({
+    articles,
+    meta
+  } = {}) => {
+    console.log("articles in generateArticles", articles);
+    if (articles?.length > 0) {
+      return `
+      <div id="cards-section" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-4 g-4">
+        ${articles.map((art) => generateArticle(art, meta)).join('')}
+      </div>
+      `;
+    }
+  }
+
+  const generatePagination = (info = {}) => {
+    if (!info?.meta) return ''
+    const {
+      currentPage,
+      totalPages
+    } = info.meta;
+    // console.log("This happens before", currentPage, totalPages);
+    if ($(".load-overlay").hasClass('visually-hidden')) return '';
+    // console.log("This happens", currentPage, totalPages);
+
+    let links = ''
+    if (totalPages > 2 && currentPage > 1) links += `<li class="page-item"><a class="page-link" href="#" data-page="1">First</a></li>`
+    if (currentPage - 1 >= 1) links += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage - 1}">Prev</a></li>`
+    if (currentPage - 2 >= 1) links += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage - 2}">${currentPage - 2}</a></li>`
+    if (currentPage - 1 >= 1) links += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage - 1}">${currentPage - 1}</a></li>`
+    links += `<li class="page-item active"><a class="page-link">${currentPage}</a></li>`
+    if (currentPage + 1 <= totalPages) links += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage + 1}">${currentPage + 1}</a></li>`
+    if (currentPage + 2 <= totalPages) links += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage + 2}">${currentPage + 2}</a></li>`
+    if (currentPage + 1 <= totalPages) links += `<li class="page-item"><a class="page-link" href="#" data-page="${currentPage + 1}">Next</a></li>`
+    if (totalPages > 2 && currentPage < totalPages)
+      links += `<li class="page-item"><a class="page-link" href="#" data-page="${totalPages}">Last</a></li>`
+    return `
+          <ul class="pagination justify-content-center mt-3">
+            ${links}
+          </ul>
+          `
+  }
+
+
+  const generatePage = (info) => {
+    // console.log("info", info?.articles?.article?.content);
+    const $page = $("#pages-own-articles-index");
+    const $title = generateTitle(info);
+    // console.log('info before GenerateArticles', info);
+    const $articles = generateArticles(info);
+    const $pagination = generatePagination(info);
+    // console.log("$pagination", $pagination);
+
+    $page.html('').append($title).append($articles).append($pagination);
+  }
+
+  const getArticlesByFilter = async (e) => {
+    e.preventDefault();
+    toggleLoadOverLay();
+
+    //clear value in search bar so pagination works
+    //on the topic and not the search result value
+    $("#index-search-form").trigger("reset");
+
+    // console.log(e, e.target, e.currentTarget);
+    const $target = $(e.currentTarget);
+    const $parentContainer = $('#topic-filter');
+    $parentContainer.find('.nav-item a.nav-link').removeAttr('aria-current').removeClass('active-topic');
+    $target.attr('aria-current', 'page').addClass('active-topic');
+
+    const topic = $target.data('topic') || '';
+
+    if (!topic) return;
+    else if (topic == 'headlines') {
+      window.location.href = '/articles';
+    } else {
+      axios({
+        method: "GET",
+        url: `/api/articles/${topic}`
+      }).then((resp) => {
+        generatePage({
+          articles: resp.data.articles,
+          meta: resp.data.meta
+        });
+      }).catch((err) => {
+        console.error(err);
+        generatePage({
+          displayErr: true
+        });
+      }).finally(() => {
+        toggleLoadOverLay();
+      });
+    }
+  }
+
+  // const ignoreBadLink = (e) => {
+  //   console.log(e.currentTarget);
+  // }
+
+  const handlePageChange = (e) => {
+    e.preventDefault();
+    // console.log("handlePageChange called");
+    toggleLoadOverLay();
+
+    /*
+    assumption: if search bar has content, then pagination is for that search
+    otherwise, the pagination is for whichever is the active topic
+    */
+
+    const query = parseFormData(new FormData($('#index-search-form')[0]));
+    const page = $(e.currentTarget).data('page');
+
+    if (query?.q) {
+      //do pagination for search result
+      axios({
+        method: 'GET',
+        url: '/api/my/reading-list',
+        params: {
+          page,
+          ...query
+        }
+      }).then((resp) => {
+        generatePage({
+          articles: resp.data.articles,
+          meta: resp.data.meta
+        });
+      }).catch((err) => {
+        console.error(err);
+        generatePage({
+          displayErr: true
+        });
+      }).finally(() => {
+        toggleLoadOverLay();
+      });
+    } else {
+      //do pagination for current active topic
+      //tag based search #TODO: need to change this logic
+      let topic = $('a.active-topic').data('topic');
+      url = (topic == 'headlines') ? '/api/articles' : `/api/articles/${topic}`;
+      //get current topic
+      axios({
+        method: 'GET',
+        url,
+        params: {
+          page,
+          topic
+        }
+      }).then((resp) => {
+        generatePage({
+          articles: resp.data.articles,
+          meta: resp.data.meta
+        });
+      }).catch((err) => {
+        console.error(err);
+        generatePage({
+          displayErr: true
+        });
+      }).finally(() => {
+        toggleLoadOverLay();
+      });
+    }
+
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    toggleLoadOverLay();
+    const queries = parseFormData(new FormData(e.currentTarget));
+    axios({
+      method: "GET",
+      url: "/api/my/reading-list",
+      params: {
+        ...queries
+      }
+    }).then((resp) => {
+      generatePage({
+        articles: resp.data.articles,
+        meta: resp.data.meta
+      });
+    }).catch((err) => {
+      console.error(err);
+      generatePage({
+        displayErr: true
+      });
+    }).finally(() => {
+      toggleLoadOverLay();
+    });
+  }
+
+  const toggleButtonType = ($button) => {
+    if ($button.hasClass('btn-outline-success')) {
+      $button.removeClass('btn-outline-success');
+      $button.addClass('btn-outline-danger');
+      $button.find('span').text('Remove Bookmark');
+    } else {
+      $button.removeClass('btn-outline-danger');
+      $button.addClass('btn-outline-success');
+      $button.find('span').text('Bookmark');
+    }
+  }
+
+  const handleBookmarkArticle = (e) => {
+    e.preventDefault();
+    toggleLoadOverLay();
+    // console.log("handleBookmarkArticle called");
+    // console.log(e.currentTarget, e.$target);
+    const $button = $(e.currentTarget)
+    const articleId = $button.data('article-id');
+
+    axios({
+      method: 'POST',
+      url: '/api/my/reading-list/articles',
+      data: {
+        articleId
+      }
+    }).then((resp) => {
+      toggleButtonType($button)
+    }).catch((err) => {
+      console.error(err);
+      generatePage({
+        displayErr: true
+      });
+    }).finally(() => {
+      toggleLoadOverLay();
+    });
+  }
+
+
+  const handleRemoveBookmark = (e) => {
+    e.preventDefault();
+    toggleLoadOverLay();
+    // console.log("handleRemoveBookmark called");
+    // console.log(e.currentTarget, e.$target);
+    const $button = $(e.currentTarget)
+    const articleId = $button.data('article-id');
+
+    axios({
+      method: 'DELETE',
+      url: '/api/my/reading-list/articles',
+      data: {
+        articleId
+      }
+    }).then((resp) => {
+      // generatePage({
+      // articles: resp.data.articles,
+      // meta: resp.data.meta
+      // });
+      toggleButtonType($button);
+    }).catch((err) => {
+      console.error(err);
+      generatePage({
+        displayErr: true
+      });
+    }).finally(() => {
+      toggleLoadOverLay();
+    });
+  }
+
+
+  $(document).ready(() => {
+    console.log("Hello world");
+    getOwnArticles();
+    // $("#topic-filter").on('click', 'a.nav-link', getArticlesByFilter);
+    // // $("#pages-articles-index").on('click', '.card a', ignoreBadLink);
+    // $("#articles-search-section").on('submit', "#index-search-form", handleSearch);
+    // $("#pages-articles-index").on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
+    // $("#pages-articles-index").on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);
+    // $("#pages-articles-index").on('click', 'div.card-actions button.btn-outline-danger[data-article-id]', handleRemoveBookmark);
+  });
+</script>
+
 
 <%- contentFor('body') %>
+<div id="pages-own-articles-index-wrapper" class="container-fluid">
+  <div id="own-articles-search-section">
+    <div class="navbar searchbar">
+      <div class="container-fluid justify-content-end">
+        <form id="index-search-form" class="d-flex" role="search">
+          <input name="q" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+          <button id="index-search-btn" class="btn btn-secondary" type="submit">Search</button>
+        </form>
+      </div>
+    </div>
+    <!-- <ul id="topic-filter" class="nav justify-content-around">
+      <li class="nav-item"><a href="#" class="nav-link text-white active-topic" aria-current="page" data-topic="headlines">Headlines</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="world">World</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="nation">Nation</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="business">Business</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="technology">Technology</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="entertainment">Entertainment</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="sports">Sports</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="science">Science</a></li>
+      <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="health">Health</a></li>
+    </ul> -->
+  </div>
+  <div id="pages-own-articles-index" class=""></div>
+</div>

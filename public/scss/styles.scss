@@ -134,6 +134,17 @@ body {
   // background-color: pink;
 }
 
+.card-bottom-readinglist {
+  display: flex;
+  padding: 5px;
+  flex-direction: column-reverse;
+  // background-color: pink;
+  .card-actions {
+    display: flex;
+    justify-content: space-evenly;
+  }
+}
+
 .active-topic {
   background-color: $bg-dark;
   border-radius: 5px;
