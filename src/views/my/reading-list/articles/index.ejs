@@ -65,12 +65,17 @@
     }, ]
     article.tags = [...article.tags, ...exTags];
     $tagsList.html(refreshTagsList(article));
-    // $tagsSearchList.replaceWith(refreshTagsSearchResult(article));
+    // $tagsSearchList.html(refreshTagsSearchResult(article));
 
   }
 
-  const refreshTagsSearchResult = (articles) => {
-    return;
+  const refreshTagsSearchResult = (tags) => {
+    if (tags?.length == 0) return '';
+    console.log('refreshTagsSearchResult', tags.tags);
+    // const $list = $("#tags-search-list");
+    const res = tags.map((tag) => `<option value=${tag.name}></option>`).join('');
+    console.log('returning', res);
+    return res;
   }
 
 
@@ -79,15 +84,21 @@
     let tags = '';
     //default tags (not deletable)
     // tags += article?.article?.tags.map(tag => (tag?.name) ? `<small class="badge rounded-pill text-bg-secondary">${tag.name}</small>` : '').join('');
-    tags += article?.article?.tags.map(tag => (tag?.name) ? `<input form="tag-edit-form" type="checkbox" class="btn-check" name="default-tag-${tag.name}" id="default-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off"><label class="btn btn-secondary" for="default-tag-${tag.name}">${tag.name}</label>` : '').join('');
+    tags += article?.article?.tags.map(tag => (tag?.name) ? `
+    <input form="tag-edit-form" type="text" class="btn-check" name="default-tag-${tag.name}" id="default-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off">
+    <label class="btn btn-secondary" for="default-tag-${tag.name}">${tag.name}
+    </label>` : '').join('');
 
-    // `<input form="tag-edit-form" type="checkbox" class="btn-check" name="default-tag-${tag.name}" id="default-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off">
+    // `<input form="tag-edit-form" type="text" class="btn-check" name="default-tag-${tag.name}" id="default-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off">
     // <span class="btn-close btn-close-white" data-tag-id="${tag.id}"><label class="btn btn-secondary" for="default-tag-${tag.name}">default${tag.name}</label>`
 
     //user defined tags (deletable)
     // tags += article?.tags.map(tag => (tag?.name) ? `<small class="badge rounded-pill text-bg-secondary"><span class="btn-close btn-close-white remove-tag-button" data-tag-id="${(tag?.id)? tag.id : ''}"></span>${tag.name}</small>` : '').join('')
-    tags += article?.tags.map(tag => (tag?.name) ? `<input form="tag-edit-form" type="checkbox" class="btn-check" name="default-tag-${tag.name}" id="default-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off">
-    <label class="btn btn-secondary" for="default-tag-${tag.name}"><span class="btn-close btn-close-white remove-tag-button" data-tag-id="${tag.id}"></span>${tag.name}</label>` : '').join('')
+    tags += article?.tags.map(tag => (tag?.name) ? `
+    <input form="tag-edit-form" type="text" class="btn-check" name="user-tag-${tag.name}" id="user-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off">
+    <label class="btn btn-secondary" for="user-tag-${tag.name}">
+      <span class="btn-close btn-close-white remove-tag-button" data-tag-id="${tag.id}"></span>${tag.name}
+    </label>` : '').join('')
     return tags;
   }
 
@@ -224,48 +235,6 @@
     $page.html('').append($title).append($articles).append($pagination);
   }
 
-  const getArticlesByFilter = async (e) => {
-    e.preventDefault();
-    toggleLoadOverLay();
-
-    //clear value in search bar so pagination works
-    //on the topic and not the search result value
-    $("#index-search-form").trigger("reset");
-
-    // console.log(e, e.target, e.currentTarget);
-    const $target = $(e.currentTarget);
-    const $parentContainer = $('#topic-filter');
-    $parentContainer.find('.nav-item a.nav-link').removeAttr('aria-current').removeClass('active-topic');
-    $target.attr('aria-current', 'page').addClass('active-topic');
-
-    const topic = $target.data('topic') || '';
-
-    if (!topic) return;
-    else if (topic == 'headlines') {
-      window.location.href = '/articles';
-    } else {
-      axios({
-        method: "GET",
-        url: `/api/articles/${topic}`
-      }).then((resp) => {
-        generatePage({
-          articles: resp.data.articles,
-          meta: resp.data.meta
-        });
-      }).catch((err) => {
-        console.error(err);
-        generatePage({
-          displayErr: true
-        });
-      }).finally(() => {
-        toggleLoadOverLay();
-      });
-    }
-  }
-
-  // const ignoreBadLink = (e) => {
-  //   console.log(e.currentTarget);
-  // }
 
   const handlePageChange = (e) => {
     e.preventDefault();
@@ -304,10 +273,6 @@
         toggleLoadOverLay();
       });
     } else {
-      //do pagination for current active topic
-      //tag based search #TODO: need to change this logic
-      // let topic = $('a.active-topic').data('topic');
-      // url = (topic == 'headlines') ? '/api/articles' : `/api/articles/${topic}`;
       //get current topic
       axios({
         method: 'GET',
@@ -468,8 +433,27 @@
   }
 
   const handleTagSearch = (e) => {
-    console.log(e.target, e.currentTarget, $(e.currentTarget)?.val());
+    // console.log(e.target, e.currentTarget, $(e.currentTarget)?.val());
+    const tagName = $(e.currentTarget)?.val() || '';
+    const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
+    console.log('formData', formData);
+    axios({
+      method: 'POST',
+      url: '/api/my/reading-list/articles/tags',
+      data: {
+        tagName,
+        currTags: {
+          ...formData
+        }
+      }
+    }).then((resp) => {
+      console.log(resp.data);
+      $("#tags-search-list").html(refreshTagsSearchResult(resp.data.tags));
+    }).catch(err => {
 
+    }).finally(() => {
+
+    });
 
   }
 
@@ -477,11 +461,12 @@
   $(document).ready(() => {
     console.log("Hello world");
     getOwnArticles();
-    // $("#topic-filter").on('click', 'a.nav-link', getArticlesByFilter);
-    // // $("#pages-articles-index").on('click', '.card a', ignoreBadLink);
+
     $("#own-articles-search-section").on('submit', "#index-search-form", handleSearch);
+
     $("#editTagsModal").on('submit', "#tag-edit-form", handleTagEdit);
     $("#editTagsModal").on('keyup', "#searchTags", handleTagSearch);
+
     const $ownArticlesIndex = $("#pages-own-articles-index");
     $ownArticlesIndex.on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
     $ownArticlesIndex.on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);

@@ -5,10 +5,45 @@ export default async function (req, res) {
   try {
     const userId = req?.session?.user?.id;
     const {
-      verifiedData: { tagName = "" },
+      verifiedData: { tagName = "", currTags = {} },
     } = req;
+    // console.log(req?.verifiedData);
+    // console.log("tagName", tagName);
 
-    console.log("tagName", tagName);
+    // // tag filtering
+    let defaultTags = [];
+    let userTags = [];
+    for (let [key, value] of Object.entries(currTags)) {
+      // console.log(key, value);
+      if (key.startsWith("default-tag")) {
+        defaultTags.push(value.toUpperCase());
+      } else if (key.startsWith("user-tag")) {
+        userTags.push(value.toUpperCase());
+      }
+    }
+
+    console.log(defaultTags, "defaultTags");
+    console.log(userTags, "userTags");
+
+    // // console.log("defaultTags.length > 0", defaultTags.length > 0);
+    const articleTagsFilter =
+      defaultTags.length > 0
+        ? {
+            name: {
+              not: { in: defaultTags },
+            },
+          }
+        : {};
+
+    // // console.log("defaultTags.length > 0", defaultTags.length > 0);
+    const ownArticleTagsFilter =
+      userTags.length > 0
+        ? {
+            name: {
+              not: { in: userTags },
+            },
+          }
+        : {};
 
     const matchingTags = await prisma.tag.findMany({
       where: {
@@ -16,50 +51,18 @@ export default async function (req, res) {
           contains: tagName,
           mode: "insensitive",
         },
+        NOT: {
+          OR: [{ name: { in: defaultTags } }, { name: { in: userTags } }],
+        },
+      },
+      orderBy: {
+        _relevance: {
+          fields: ["name"],
+          search: tagName,
+          sort: "asc",
+        },
       },
     });
-
-    // // tag filtering
-    // let defaultTags = [];
-    // let userTags = [];
-    // for (let [key, value] of Object.entries(req.query)) {
-    //   console.log(key, value);
-    //   if (key.startsWith("default-tag")) {
-    //     defaultTags.push(value);
-    //   } else if (key.startsWith("user-tag")) {
-    //     userTags.push(value);
-    //   }
-    // }
-
-    // // console.log("defaultTags.length > 0", defaultTags.length > 0);
-    // const articleTagsFilter =
-    //   defaultTags.length > 0
-    //     ? {
-    //         article: {
-    //           tags: {
-    //             some: {
-    //               name: {
-    //                 in: defaultTags,
-    //               },
-    //             },
-    //           },
-    //         },
-    //       }
-    //     : {};
-
-    // // console.log("defaultTags.length > 0", defaultTags.length > 0);
-    // const ownArticleTagsFilter =
-    //   userTags.length > 0
-    //     ? {
-    //         tags: {
-    //           some: {
-    //             name: {
-    //               in: userTags,
-    //             },
-    //           },
-    //         },
-    //       }
-    //     : {};
 
     // // if (req?.query) console.log("req.query", req.query);
     // // Filters (Not really possible directly, just specify different endpoints instead)
@@ -142,6 +145,7 @@ export default async function (req, res) {
     //     userId,
     //   },
     // });
+    console.log("returning", matchingTags);
     return res.status(200).json({
       tags: matchingTags,
     });

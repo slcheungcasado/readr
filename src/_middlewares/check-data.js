@@ -4,6 +4,7 @@ import { validationConfigs } from "../schemas/data-schemas.js";
 export function checkData(schema) {
   return async function (req, res, next) {
     try {
+      console.log(req.body);
       const { body } = req;
       req.verifiedData = await schema.validate(body, validationConfigs);
       console.log("Data passes validation");
