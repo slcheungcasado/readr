@@ -27,8 +27,72 @@
     return (end > 0) ? title.slice(0, end) : title;
   }
 
+  const replaceEditTagModalContent = (article) => {
+    console.log("replaceEditTagModalContent", article);
+    // const $modal = $("#editTagsModal");
+    const $tagsList = $("#current-article-tags");
+    // const $tagsSearchList = $("#tags-search-list");
+    let exTags = [{
+      id: 50,
+      name: 'my tag',
+    }, {
+      id: 50,
+      name: 'my tag',
+    }, {
+      id: 50,
+      name: 'my tag',
+    }, {
+      id: 50,
+      name: 'my tag',
+    }, {
+      id: 50,
+      name: 'my tag',
+    }, {
+      id: 50,
+      name: 'my tag',
+    }, {
+      id: 50,
+      name: 'my tag',
+    }, {
+      id: 50,
+      name: 'my tag',
+    }, {
+      id: 50,
+      name: 'my tag',
+    }, {
+      id: 50,
+      name: 'my tag',
+    }, ]
+    article.tags = [...article.tags, ...exTags];
+    $tagsList.html(refreshTagsList(article));
+    // $tagsSearchList.replaceWith(refreshTagsSearchResult(article));
+
+  }
+
+  const refreshTagsSearchResult = (articles) => {
+    return;
+  }
+
+
+  const refreshTagsList = (article) => {
+    console.log(article);
+    let tags = '';
+    //default tags (not deletable)
+    // tags += article?.article?.tags.map(tag => (tag?.name) ? `<small class="badge rounded-pill text-bg-secondary">${tag.name}</small>` : '').join('');
+    tags += article?.article?.tags.map(tag => (tag?.name) ? `<input form="tag-edit-form" type="checkbox" class="btn-check" name="default-tag-${tag.name}" id="default-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off"><label class="btn btn-secondary" for="default-tag-${tag.name}">${tag.name}</label>` : '').join('');
+
+    // `<input form="tag-edit-form" type="checkbox" class="btn-check" name="default-tag-${tag.name}" id="default-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off">
+    // <span class="btn-close btn-close-white" data-tag-id="${tag.id}"><label class="btn btn-secondary" for="default-tag-${tag.name}">default${tag.name}</label>`
+
+    //user defined tags (deletable)
+    // tags += article?.tags.map(tag => (tag?.name) ? `<small class="badge rounded-pill text-bg-secondary"><span class="btn-close btn-close-white remove-tag-button" data-tag-id="${(tag?.id)? tag.id : ''}"></span>${tag.name}</small>` : '').join('')
+    tags += article?.tags.map(tag => (tag?.name) ? `<input form="tag-edit-form" type="checkbox" class="btn-check" name="default-tag-${tag.name}" id="default-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off">
+    <label class="btn btn-secondary" for="default-tag-${tag.name}"><span class="btn-close btn-close-white remove-tag-button" data-tag-id="${tag.id}"></span>${tag.name}</label>` : '').join('')
+    return tags;
+  }
+
   const generateTags = (article) => {
-    return (article?.tags?.length == 0) ? 'hello' : article?.tags.map(tag => {
+    return (article?.tags?.length == 0) ? '' : article?.tags.map(tag => {
       return (tag?.name) ? `<small class="badge rounded-pill text-bg-secondary">${tag.name}</small>` : ''
     }).join('');
   }
@@ -90,7 +154,7 @@
               <i class="fas fa-bookmark"></i>
               <span>Remove Bookmark</span>
             </button>
-            <button class="btn btn-outline-info" data-own-article-id="${(readingListArticle?.id)? readingListArticle.id : null}">
+            <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#editTagsModal" data-own-article-id="${(readingListArticle?.id)? readingListArticle.id : null}">
               <i class="fas fa-tag"></i>
               <span>Edit Tags</span>
             </button>
@@ -374,16 +438,18 @@
     // console.log("handleBookmarkArticle called");
     // console.log(e.currentTarget, e.$target);
     const $button = $(e.currentTarget)
-    const articleId = $button.data('article-id');
-
+    $button?.prop("disabled", true);
+    const articleId = $button.data('own-article-id');
     axios({
-      method: 'POST',
-      url: '/api/my/reading-list/articles',
-      data: {
-        articleId
+      method: 'GET',
+      url: `/api/my/reading-list/articles/${articleId}`,
+      params: {
+        // id: articleId,
+        tagsOnly: true,
       }
     }).then((resp) => {
-      toggleButtonType($button)
+      replaceEditTagModalContent(resp.data.articles)
+      console.log(resp?.data);
     }).catch((err) => {
       console.error(err);
       generatePage({
@@ -391,7 +457,20 @@
       });
     }).finally(() => {
       toggleLoadOverLay();
+      $button?.prop("disabled", false);
     });
+  }
+
+  const handleTagEdit = (e) => {
+    e.preventDefault();
+
+    console.log("Tag Edit Details submitted");
+  }
+
+  const handleTagSearch = (e) => {
+    console.log(e.target, e.currentTarget, $(e.currentTarget)?.val());
+
+
   }
 
 
@@ -401,6 +480,8 @@
     // $("#topic-filter").on('click', 'a.nav-link', getArticlesByFilter);
     // // $("#pages-articles-index").on('click', '.card a', ignoreBadLink);
     $("#own-articles-search-section").on('submit', "#index-search-form", handleSearch);
+    $("#editTagsModal").on('submit', "#tag-edit-form", handleTagEdit);
+    $("#editTagsModal").on('keyup', "#searchTags", handleTagSearch);
     const $ownArticlesIndex = $("#pages-own-articles-index");
     $ownArticlesIndex.on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
     $ownArticlesIndex.on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);
@@ -427,7 +508,7 @@
                   <h1 class="modal-title fs-5" id="filtersModalLabel">Please select your search filters</h1>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body modal-filters-body">
+                <div class="modal-body tags-list-in-modal">
                   <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-headline" id="default-tag-headline" value="HEADLINE" autocomplete="off">
                   <label class="btn btn-outline-secondary" for="default-tag-headline">Headline</label><br>
                   <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-world" id="default-tag-world" value="WORLD" autocomplete="off">
@@ -475,6 +556,31 @@
       <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="science">Science</a></li>
       <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="health">Health</a></li>
     </ul> -->
+  </div>
+  <div class="modal fade" id="editTagsModal" tabindex="-1" aria-labelledby="editTagsModalLabel" aria-hidden="true">
+    <div class="modal-dialog text-dark">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="editTagsModalLabel">Edit Tags</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body modal-edit-tags-body">
+          <form id="tag-edit-form" class="visibility-hidden"></form>
+          <div id="current-article-tags" class="tags-list-in-modal">
+          </div>
+          <label for="searchTags">Search tag:</label>
+          <input list="tags-search-list" id="searchTags" name="tagName" autocomplete="off" />
+          <datalist id="tags-search-list">
+            <option value="APPLE"></option>
+          </datalist>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Add tag</button>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" form="tag-edit-form" class="btn btn-primary">Apply</button>
+        </div>
+      </div>
+    </div>
   </div>
   <div id="pages-own-articles-index" class=""></div>
 </div>

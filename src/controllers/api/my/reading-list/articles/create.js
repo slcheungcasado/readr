@@ -34,11 +34,7 @@ export default async function (req, res) {
       readingList: { connect: { id: user.readingList.id } },
       article: { connect: { id: Number(article.id) } },
       tags: {
-        connect: article.tags.map((t) => {
-          return {
-            name: t.name,
-          };
-        }),
+        create: [],
       },
     };
 

@@ -4,75 +4,38 @@ import prisma from "../../../../_helpers/prisma.js";
 export default async function (req, res) {
   try {
     const userId = req?.session?.user?.id;
-    const { q = "", tagsOnly = false } = req.query;
-
-    let matchedRecords = 0;
-    let articles = [];
-    // let topic = "HEADLINE";
-    const whereQuery = q
+    let { tagsOnly = false } = req.query;
+    tagsOnly = !!tagsOnly;
+    const { id } = req.params;
+    // console.log("id", id);
+    // console.log("req.params", req.params);
+    // console.log("req.query", req.query);
+    // console.log("tagsOnly", tagsOnly);
+    const selectQuery = tagsOnly
       ? {
-          OR: [
-            {
-              article: { title: { contains: q, mode: "insensitive" } },
-            },
-            {
-              article: { sourceName: { contains: q, mode: "insensitive" } },
-            },
-            {
-              article: { description: { contains: q, mode: "insensitive" } },
-            },
-          ],
+          select: {
+            tags: true,
+          },
         }
       : {};
-    // tags: {
-    //   some: {
-    //     name: {
-    //       equals: topic,
-    //     },
-    //   },
-    // },
     const prismaQuery = {
       where: {
-        ...whereQuery,
-        ...articleTagsFilter,
-        ...ownArticleTagsFilter,
-        readingList: {
-          userId,
-        },
+        id: Number(id),
       },
       include: {
         tags: true,
         article: {
-          include: {
-            tags: true,
-          },
+          ...selectQuery,
         },
-      },
-      skip,
-      take,
-      orderBy: {
-        createdAt: "desc",
       },
     };
-    articles = await prisma.readingListArticle.findMany(prismaQuery);
-    matchedRecords = await prisma.readingListArticle.count({
-      where: {
-        ...whereQuery,
-        ...articleTagsFilter,
-        ...ownArticleTagsFilter,
-        readingList: {
-          userId,
-        },
-      },
-    });
+    const matchedArticle = await prisma.readingListArticle.findUnique(
+      prismaQuery
+    );
 
-    console.log(`Found ${matchedRecords} articles`);
     return res.status(200).json({
-      articles: articles,
+      articles: matchedArticle,
       meta: {
-        currentPage: page,
-        totalPages: Math.ceil(matchedRecords / take),
-        // numArticles: matchedRecords,
         userId,
       },
     });

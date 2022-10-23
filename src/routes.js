@@ -11,6 +11,7 @@ import addToReadingList from "./schemas/add-to-reading-list.js";
 import removeFromReadingList from "./schemas/remove-from-reading-list.js";
 import updateProfile from "./schemas/update-profile.js";
 import showOwnArticleTags from "./schemas/show-own-article.js";
+import indexMatchingTags from "./schemas/index-matching-tags.js";
 
 const router = Router();
 
@@ -48,11 +49,11 @@ router.put(
 
 // API | MY ARTICLES | AUTH REQUIRED
 router.get(
-  "/api/my/reading-list/articles/:id/tags",
+  "/api/my/reading-list/articles/:id",
   authenticateUser("json"),
-  checkData(showOwnArticleTags),
   (await import("./controllers/api/my/reading-list/articles/show.js")).default
 );
+
 router.get(
   "/api/my/reading-list",
   authenticateUser("json"),
@@ -64,6 +65,14 @@ router.post(
   authenticateUser("json"),
   checkData(addToReadingList),
   (await import("./controllers/api/my/reading-list/articles/create.js")).default
+);
+
+router.post(
+  "/api/my/reading-list/articles/tags",
+  authenticateUser("json"),
+  checkData(indexMatchingTags),
+  (await import("./controllers/api/my/reading-list/articles/tags/index.js"))
+    .default
 );
 
 router.delete(
