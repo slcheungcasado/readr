@@ -37,7 +37,7 @@
 
   const secondsToHoursMinutes = (seconds) => {
     const hours = Math.trunc(seconds / 3600);
-    const minutes = Math.trunc(seconds / 60) - (hours * 60);
+    const minutes = Math.ceil(seconds / 60) - (hours * 60);
     return `${(hours > 0)? `${hours} hr`: ''}` + `${(minutes > 0)? `${minutes} min`: ''}`
   }
 

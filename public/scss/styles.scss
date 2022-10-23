@@ -28,7 +28,7 @@ body {
   width: 100%;
   background-color: #282b30;
   opacity: 0.8;
-  z-index: 2;
+  z-index: 1056;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -145,6 +145,12 @@ body {
   }
 }
 
+.card-actions {
+  button {
+    border-style: none;
+  }
+}
+
 .active-topic {
   background-color: $bg-dark;
   border-radius: 5px;
@@ -154,4 +160,15 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.modal-filters-body {
+  // background-color: pink !important;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  label {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
 }

@@ -34,9 +34,10 @@
   }
 
   const secondsToHoursMinutes = (seconds) => {
+    // console.log("secondsToHoursMinutes()", seconds);
     const hours = Math.trunc(seconds / 3600);
-    const minutes = Math.trunc(seconds / 60) - (hours * 60);
-    return `${(hours > 0)? `${hours} hr`: ''} ` + `${(minutes > 0)? `${minutes} min`: ''}`
+    const minutes = Math.ceil(seconds / 60) - (hours * 60);
+    return `${(hours > 0)? `${hours} hr `: ''}` + `${(minutes > 0)? `${minutes} min`: ''}`
   }
 
   const generateTitle = ({
@@ -52,10 +53,12 @@
       month: 'short',
       day: 'numeric'
     };
-    console.log('generateArticle readingListArticle', readingListArticle);
-    console.log('generateArticle meta', meta);
+    // console.log('generateArticle readingListArticle', readingListArticle);
+    // console.log('generateArticle meta', meta);
     const userTags = readingListArticle?.article?.tags || [];
     article = readingListArticle?.article || {};
+    // console.log(`<span>Read <small>${(article?.readingTime)? '(' + secondsToHoursMinutes(article.readingTime) + ')' : ''}</small></span>`)
+
     return `
     <div class="col">
       <div class="card h-100">
@@ -83,11 +86,15 @@
         </div>
         <div class="card-bottom-readinglist">
           <div class="card-actions">
-            <button class="btn btn-outline-danger" data-article-id="${(readingListArticle?.id)? readingListArticle.id : null}">
+            <button class="btn btn-outline-danger" data-article-id="${(article?.id)? article.id : null}">
               <i class="fas fa-bookmark"></i>
               <span>Remove Bookmark</span>
             </button>
-            <button class="btn btn-outline-secondary" data-article-id="${(readingListArticle?.id)? readingListArticle.id : null}">
+            <button class="btn btn-outline-info" data-own-article-id="${(readingListArticle?.id)? readingListArticle.id : null}">
+              <i class="fas fa-tag"></i>
+              <span>Edit Tags</span>
+            </button>
+            <button class="btn btn-outline-secondary" data-own-article-id="${(readingListArticle?.id)? readingListArticle.id : null}">
               <i class="fas fa-eye"></i>
               <span>Read <small>${(article?.readingTime)? '(' + secondsToHoursMinutes(article.readingTime) + ')' : ''}</small></span>
             </button>
@@ -118,9 +125,9 @@
       currentPage,
       totalPages
     } = info.meta;
-    // console.log("This happens before", currentPage, totalPages);
+    console.log("This happens before", currentPage, totalPages);
     if ($(".load-overlay").hasClass('visually-hidden')) return '';
-    // console.log("This happens", currentPage, totalPages);
+    console.log("This happens", currentPage, totalPages);
 
     let links = ''
     if (totalPages > 2 && currentPage > 1) links += `<li class="page-item"><a class="page-link" href="#" data-page="1">First</a></li>`
@@ -208,7 +215,8 @@
 
     const query = parseFormData(new FormData($('#index-search-form')[0]));
     const page = $(e.currentTarget).data('page');
-
+    console.log("query", query);
+    console.log("page", page);
     if (query?.q) {
       //do pagination for search result
       axios({
@@ -234,15 +242,14 @@
     } else {
       //do pagination for current active topic
       //tag based search #TODO: need to change this logic
-      let topic = $('a.active-topic').data('topic');
-      url = (topic == 'headlines') ? '/api/articles' : `/api/articles/${topic}`;
+      // let topic = $('a.active-topic').data('topic');
+      // url = (topic == 'headlines') ? '/api/articles' : `/api/articles/${topic}`;
       //get current topic
       axios({
         method: 'GET',
-        url,
+        url: '/api/my/reading-list',
         params: {
-          page,
-          topic
+          page
         }
       }).then((resp) => {
         generatePage({
@@ -264,7 +271,12 @@
   const handleSearch = (e) => {
     e.preventDefault();
     toggleLoadOverLay();
-    const queries = parseFormData(new FormData(e.currentTarget));
+    let queries = parseFormData(new FormData(e.currentTarget));
+    let queriesFilter = parseFormData(new FormData($('#filters-form')[0]))
+    queries = {
+      ...queries,
+      ...queriesFilter
+    }
     axios({
       method: "GET",
       url: "/api/my/reading-list",
@@ -355,16 +367,45 @@
     });
   }
 
+  const handleEditTag = (e) => {
+    console.log(e.currentTarget, e.$target);
+    e.preventDefault();
+    toggleLoadOverLay();
+    // console.log("handleBookmarkArticle called");
+    // console.log(e.currentTarget, e.$target);
+    const $button = $(e.currentTarget)
+    const articleId = $button.data('article-id');
+
+    axios({
+      method: 'POST',
+      url: '/api/my/reading-list/articles',
+      data: {
+        articleId
+      }
+    }).then((resp) => {
+      toggleButtonType($button)
+    }).catch((err) => {
+      console.error(err);
+      generatePage({
+        displayErr: true
+      });
+    }).finally(() => {
+      toggleLoadOverLay();
+    });
+  }
+
 
   $(document).ready(() => {
     console.log("Hello world");
     getOwnArticles();
     // $("#topic-filter").on('click', 'a.nav-link', getArticlesByFilter);
     // // $("#pages-articles-index").on('click', '.card a', ignoreBadLink);
-    // $("#articles-search-section").on('submit', "#index-search-form", handleSearch);
-    // $("#pages-articles-index").on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
-    // $("#pages-articles-index").on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);
-    // $("#pages-articles-index").on('click', 'div.card-actions button.btn-outline-danger[data-article-id]', handleRemoveBookmark);
+    $("#own-articles-search-section").on('submit', "#index-search-form", handleSearch);
+    const $ownArticlesIndex = $("#pages-own-articles-index");
+    $ownArticlesIndex.on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
+    $ownArticlesIndex.on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);
+    $ownArticlesIndex.on('click', 'div.card-actions button.btn-outline-info[data-own-article-id]', handleEditTag);
+    $ownArticlesIndex.on('click', 'div.card-actions button.btn-outline-danger[data-article-id]', handleRemoveBookmark);
   });
 </script>
 
@@ -376,10 +417,53 @@
       <div class="container-fluid justify-content-end">
         <form id="index-search-form" class="d-flex" role="search">
           <input name="q" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-          <button id="index-search-btn" class="btn btn-secondary" type="submit">Search</button>
+          <button id="index-search-btn" class="btn btn-secondary" type="submit">
+            Search
+          </button>
+          <div class="modal fade" id="filtersModal" tabindex="-1" aria-labelledby="filtersModalLabel" aria-hidden="true">
+            <div class="modal-dialog text-dark">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title fs-5" id="filtersModalLabel">Please select your search filters</h1>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body modal-filters-body">
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-headline" id="default-tag-headline" value="HEADLINE" autocomplete="off">
+                  <label class="btn btn-outline-secondary" for="default-tag-headline">Headline</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-world" id="default-tag-world" value="WORLD" autocomplete="off">
+                  <label class="btn btn-outline-secondary" for="default-tag-world">World</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-nation" id="default-tag-nation" value="NATION" autocomplete="off">
+                  <label class="btn btn-outline-secondary" for="default-tag-nation">Nation</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-business" id="default-tag-business" value="BUSINESS" autocomplete="off">
+                  <label class="btn btn-outline-secondary" for="default-tag-business">Business</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-technology" id="default-tag-technology" value="TECHNOLOGY" autocomplete="off">
+                  <label class="btn btn-outline-secondary" for="default-tag-technology">Technology</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-entertainment" id="default-tag-entertainment" value="ENTERTAINMENT" autocomplete="off">
+                  <label class="btn btn-outline-secondary" for="default-tag-entertainment">Entertainment</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-sports" id="default-tag-sports" value="SPORTS" autocomplete="off">
+                  <label class="btn btn-outline-secondary" for="default-tag-sports">Sports</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-science" id="default-tag-science" value="SCIENCE" autocomplete="off">
+                  <label class="btn btn-outline-secondary" for="default-tag-science">Science</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-health" id="default-tag-health" value="HEALTH" autocomplete="off">
+                  <label class="btn btn-outline-secondary" for="default-tag-health">Health</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-example" id="user-tag-example" value="EXAMPLE" autocomplete="off">
+                  <label class="btn btn-outline-secondary" for="user-tag-example">example</label><br>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <!-- <button type="button" class="btn btn-primary">Apply</button> -->
+                </div>
+              </div>
+            </div>
+          </div>
         </form>
+        <button id="index-search-btn" class="btn btn-secondary" type="button" data-bs-toggle="modal" data-bs-target="#filtersModal">
+          <span>Filters</span>
+          <i class="fas fa-filter"></i>
+        </button>
       </div>
     </div>
+
     <!-- <ul id="topic-filter" class="nav justify-content-around">
       <li class="nav-item"><a href="#" class="nav-link text-white active-topic" aria-current="page" data-topic="headlines">Headlines</a></li>
       <li class="nav-item"><a href="#" class="nav-link text-white" data-topic="world">World</a></li>

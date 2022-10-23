@@ -1,13 +1,17 @@
 import { Router } from "express";
+
 import { checkData } from "./_middlewares/check-data.js";
-import registrationSchema from "./schemas/registration.js";
-import loginSchema from "./schemas/login.js";
-import addToReadingList from "./schemas/add-to-reading-list.js";
-import removeFromReadingList from "./schemas/remove-from-reading-list.js";
 import authenticateUser from "./_middlewares/authenticate-user.js";
-import updateProfile from "./schemas/update-profile.js";
 import alreadyLoggedIn from "./_middlewares/already-logged-in.js";
 import checkOwnership from "./_middlewares/_check_ownership.js";
+
+import loginSchema from "./schemas/login.js";
+import registrationSchema from "./schemas/registration.js";
+import addToReadingList from "./schemas/add-to-reading-list.js";
+import removeFromReadingList from "./schemas/remove-from-reading-list.js";
+import updateProfile from "./schemas/update-profile.js";
+import showOwnArticleTags from "./schemas/show-own-article.js";
+
 const router = Router();
 
 // API | AUTH
@@ -43,6 +47,12 @@ router.put(
 );
 
 // API | MY ARTICLES | AUTH REQUIRED
+router.get(
+  "/api/my/reading-list/articles/:id/tags",
+  authenticateUser("json"),
+  checkData(showOwnArticleTags),
+  (await import("./controllers/api/my/reading-list/articles/show.js")).default
+);
 router.get(
   "/api/my/reading-list",
   authenticateUser("json"),
