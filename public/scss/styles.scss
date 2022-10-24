@@ -166,22 +166,22 @@ body {
   // background-color: pink !important;
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-around;
+  // justify-content: space-around;
   label {
     margin-top: 5px;
     margin-bottom: 5px;
   }
 }
 
-#current-article-tags {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  label {
-    margin-top: 5px;
-    margin-bottom: 5px;
-  }
-}
+// #current-article-tags {
+//   display: flex;
+//   flex-wrap: wrap;
+//   justify-content: space-around;
+//   label {
+//     margin-top: 5px;
+//     margin-bottom: 5px;
+//   }
+// }
 
 .remove-tag-button {
   margin-right: 5px;

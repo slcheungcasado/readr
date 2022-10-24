@@ -28,78 +28,28 @@
   }
 
   const replaceEditTagModalContent = (article) => {
-    console.log("replaceEditTagModalContent", article);
-    // const $modal = $("#editTagsModal");
     const $tagsList = $("#current-article-tags");
-    // const $tagsSearchList = $("#tags-search-list");
-    let exTags = [{
-      id: 50,
-      name: 'my tag',
-    }, {
-      id: 50,
-      name: 'my tag',
-    }, {
-      id: 50,
-      name: 'my tag',
-    }, {
-      id: 50,
-      name: 'my tag',
-    }, {
-      id: 50,
-      name: 'my tag',
-    }, {
-      id: 50,
-      name: 'my tag',
-    }, {
-      id: 50,
-      name: 'my tag',
-    }, {
-      id: 50,
-      name: 'my tag',
-    }, {
-      id: 50,
-      name: 'my tag',
-    }, {
-      id: 50,
-      name: 'my tag',
-    }, ]
-    article.tags = [...article.tags, ...exTags];
     $tagsList.html(refreshTagsList(article));
-    // $tagsSearchList.html(refreshTagsSearchResult(article));
-
+    console.log('replaceEditTagModalContent', article);
+    $("#submit-tag-edit-btn").attr("data-own-article-id", article.id);
   }
 
   const refreshTagsSearchResult = (tags) => {
     if (tags?.length == 0) return '';
-    console.log('refreshTagsSearchResult', tags.tags);
-    // const $list = $("#tags-search-list");
-    const res = tags.map((tag) => `<option value=${tag.name}></option>`).join('');
-    console.log('returning', res);
-    return res;
+    return tags.map((tag) => `<option value=${tag.name} data-tag-id="${tag?.id}"></option>`).join('');
   }
 
+  const makeTag = (tag) => {
+    return `
+    <input form="tag-edit-form" type="text" class="btn-check" name="user-tag-${tag.name}" id="user-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off">
+    <label class="btn btn-secondary mx-2" for="user-tag-${tag.name}">
+      <span class="btn-close btn-close-white remove-tag-button" data-tag-id="${tag.id}"></span>
+      ${tag.name}
+    </label>`
+  }
 
   const refreshTagsList = (article) => {
-    console.log(article);
-    let tags = '';
-    //default tags (not deletable)
-    // tags += article?.article?.tags.map(tag => (tag?.name) ? `<small class="badge rounded-pill text-bg-secondary">${tag.name}</small>` : '').join('');
-    tags += article?.article?.tags.map(tag => (tag?.name) ? `
-    <input form="tag-edit-form" type="text" class="btn-check" name="default-tag-${tag.name}" id="default-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off">
-    <label class="btn btn-secondary" for="default-tag-${tag.name}">${tag.name}
-    </label>` : '').join('');
-
-    // `<input form="tag-edit-form" type="text" class="btn-check" name="default-tag-${tag.name}" id="default-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off">
-    // <span class="btn-close btn-close-white" data-tag-id="${tag.id}"><label class="btn btn-secondary" for="default-tag-${tag.name}">default${tag.name}</label>`
-
-    //user defined tags (deletable)
-    // tags += article?.tags.map(tag => (tag?.name) ? `<small class="badge rounded-pill text-bg-secondary"><span class="btn-close btn-close-white remove-tag-button" data-tag-id="${(tag?.id)? tag.id : ''}"></span>${tag.name}</small>` : '').join('')
-    tags += article?.tags.map(tag => (tag?.name) ? `
-    <input form="tag-edit-form" type="text" class="btn-check" name="user-tag-${tag.name}" id="user-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off">
-    <label class="btn btn-secondary" for="user-tag-${tag.name}">
-      <span class="btn-close btn-close-white remove-tag-button" data-tag-id="${tag.id}"></span>${tag.name}
-    </label>` : '').join('')
-    return tags;
+    return article?.tags.map(tag => (tag?.name) ? makeTag(tag) : '').join('') || '';
   }
 
   const generateTags = (article) => {
@@ -128,11 +78,8 @@
       month: 'short',
       day: 'numeric'
     };
-    // console.log('generateArticle readingListArticle', readingListArticle);
-    // console.log('generateArticle meta', meta);
     const userTags = readingListArticle?.article?.tags || [];
     article = readingListArticle?.article || {};
-    // console.log(`<span>Read <small>${(article?.readingTime)? '(' + secondsToHoursMinutes(article.readingTime) + ')' : ''}</small></span>`)
 
     return `
     <div class="col">
@@ -154,7 +101,7 @@
                 ${(article?.title)? shortenTitle(article.title) : "Card Title"}</a>
             </h5>
             <div class="card-tags-section">
-              ${generateTags(article)}
+              ${generateTags(readingListArticle)}
             </div>
           </div>
           <p class="card-text line-clamp">${(article?.description)? article.description: ""}</p>
@@ -222,15 +169,17 @@
           `
   }
 
+  const updateOwnSearchFilters = (info) => {
+
+  }
 
   const generatePage = (info) => {
-    // console.log("info", info?.articles?.article?.content);
     const $page = $("#pages-own-articles-index");
     const $title = generateTitle(info);
-    // console.log('info before GenerateArticles', info);
     const $articles = generateArticles(info);
     const $pagination = generatePagination(info);
-    // console.log("$pagination", $pagination);
+
+    updateOwnSearchFilters(info);
 
     $page.html('').append($title).append($articles).append($pagination);
   }
@@ -428,44 +377,135 @@
 
   const handleTagEdit = (e) => {
     e.preventDefault();
-
+    const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
     console.log("Tag Edit Details submitted");
+    console.log('formData', formData);
+    console.log('ownArticleId', $("#submit-tag-edit-btn").data('ownArticleId'));
+    const ownArticleId = $("#submit-tag-edit-btn").data('ownArticleId')
+
+    axios({
+      method: 'PUT',
+      url: '/api/my/reading-list/articles/tags',
+      data: {
+        id: ownArticleId,
+        currTags: formData,
+      }
+    }).then((resp) => {
+      console.log(resp.data)
+    }).catch((err) => {
+      console.error(err)
+    }).finally(() => {
+
+    });
+  }
+
+
+  const handleRemoveFromTagList = (e) => {
+    const $btn = $(e.currentTarget);
+    const $label = $btn?.closest('label');
+    const $input = $label?.siblings(`input[name=${$label?.attr('for')}]`);
+
+    $label?.remove();
+    $input?.remove();
+
+    console.log('label', $label);
+    console.log('input', $input);
+  }
+
+  const handleAppendTagList = (e) => {
+    console.log('e.currentTarget', e.currentTarget, e.target);
+    const tagName = $("#search-tags")?.val() || '';
+    const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
+    const tagAsUpper = tagName.toUpperCase();
+    if (tagName && Object.values(formData).every(v => v.toUpperCase() !== tagAsUpper)) {
+      const match = $("#tags-search-list").find(`option[value="${tagAsUpper}"]`);
+      // console.log('match', match)
+      // console.log('match.data("isUserTag")', match.data("isUserTag"));
+      $("#current-article-tags").append(makeTag({
+        name: tagAsUpper,
+        id: match.data('tagId') || null,
+      }));
+
+      // if (match.data('isUserTag') === false) {
+      //   $("#current-article-tags").append(makeDefaultTag({
+      //     name: tagAsUpper,
+      //     isDeletable: false,
+      //     id: match.data('tagId') || null,
+      //     isRemovable: true,
+      //   }));
+      // } else {
+      //   $("#current-article-tags").append(makeTag({
+      //     name: tagAsUpper,
+      //     isDeletable: true,
+      //     id: match.data('tagId') || null,
+      //     isRemovable: true,
+      //   }));
+      // }
+
+      $("#search-tags").val('');
+      $("#tags-search-list").html('');
+    } else {
+      console.log('tagName', tagName, 'CANT be added');
+    }
+  }
+
+  const redirectToSelf = (e) => {
+    window.location.reload();
   }
 
   const handleTagSearch = (e) => {
     // console.log(e.target, e.currentTarget, $(e.currentTarget)?.val());
+    const code = e.keyCode;
+
     const tagName = $(e.currentTarget)?.val() || '';
     const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
-    console.log('formData', formData);
-    axios({
-      method: 'POST',
-      url: '/api/my/reading-list/articles/tags',
-      data: {
-        tagName,
-        currTags: {
-          ...formData
+
+    console.log('handleTagSearch formData', formData)
+
+    if (code == 8 || code == 9 ||
+      code == 46 || code == 95 || code == 189 ||
+      (code > 47 && code < 58) ||
+      (code > 64 && code < 91) ||
+      (code > 96 && code < 123)) {
+      // console.log('formData', formData);
+      axios({
+        method: 'POST',
+        url: '/api/my/reading-list/articles/tags',
+        data: {
+          tagName,
+          currTags: {
+            ...formData
+          }
         }
-      }
-    }).then((resp) => {
-      console.log(resp.data);
-      $("#tags-search-list").html(refreshTagsSearchResult(resp.data.tags));
-    }).catch(err => {
+      }).then((resp) => {
+        console.log(resp.data);
+        $("#tags-search-list").html(refreshTagsSearchResult(resp.data.tags));
+      }).catch(err => {
+        console.error(err);
+      }).finally(() => {
 
-    }).finally(() => {
+      });
 
-    });
+    }
+
+    if (code == 13) {
+      $("#search-tag-add").trigger('click');
+    }
 
   }
 
 
   $(document).ready(() => {
-    console.log("Hello world");
     getOwnArticles();
 
     $("#own-articles-search-section").on('submit', "#index-search-form", handleSearch);
 
-    $("#editTagsModal").on('submit', "#tag-edit-form", handleTagEdit);
-    $("#editTagsModal").on('keyup', "#searchTags", handleTagSearch);
+    const $editTagsModal = $("#editTagsModal");
+    $editTagsModal.on('submit', "#tag-edit-form", handleTagEdit);
+    $editTagsModal.on('keyup', "#search-tags", handleTagSearch);
+    $editTagsModal.on('click', "#search-tag-add", handleAppendTagList);
+    $editTagsModal.on('click', 'span.btn-close.remove-tag-button', handleRemoveFromTagList)
+    $editTagsModal.on('hidden.bs.modal', redirectToSelf)
 
     const $ownArticlesIndex = $("#pages-own-articles-index");
     $ownArticlesIndex.on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
@@ -494,26 +534,26 @@
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body tags-list-in-modal">
-                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-headline" id="default-tag-headline" value="HEADLINE" autocomplete="off">
-                  <label class="btn btn-outline-secondary" for="default-tag-headline">Headline</label><br>
-                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-world" id="default-tag-world" value="WORLD" autocomplete="off">
-                  <label class="btn btn-outline-secondary" for="default-tag-world">World</label><br>
-                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-nation" id="default-tag-nation" value="NATION" autocomplete="off">
-                  <label class="btn btn-outline-secondary" for="default-tag-nation">Nation</label><br>
-                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-business" id="default-tag-business" value="BUSINESS" autocomplete="off">
-                  <label class="btn btn-outline-secondary" for="default-tag-business">Business</label><br>
-                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-technology" id="default-tag-technology" value="TECHNOLOGY" autocomplete="off">
-                  <label class="btn btn-outline-secondary" for="default-tag-technology">Technology</label><br>
-                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-entertainment" id="default-tag-entertainment" value="ENTERTAINMENT" autocomplete="off">
-                  <label class="btn btn-outline-secondary" for="default-tag-entertainment">Entertainment</label><br>
-                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-sports" id="default-tag-sports" value="SPORTS" autocomplete="off">
-                  <label class="btn btn-outline-secondary" for="default-tag-sports">Sports</label><br>
-                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-science" id="default-tag-science" value="SCIENCE" autocomplete="off">
-                  <label class="btn btn-outline-secondary" for="default-tag-science">Science</label><br>
-                  <input form="index-search-form" type="checkbox" class="btn-check" name="default-tag-health" id="default-tag-health" value="HEALTH" autocomplete="off">
-                  <label class="btn btn-outline-secondary" for="default-tag-health">Health</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-headline" id="user-tag-headline" value="HEADLINE" autocomplete="off">
+                  <label class="btn btn-outline-secondary mx-2" for="user-tag-headline">Headline</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-world" id="user-tag-world" value="WORLD" autocomplete="off">
+                  <label class="btn btn-outline-secondary mx-2" for="user-tag-world">World</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-nation" id="user-tag-nation" value="NATION" autocomplete="off">
+                  <label class="btn btn-outline-secondary mx-2" for="user-tag-nation">Nation</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-business" id="user-tag-business" value="BUSINESS" autocomplete="off">
+                  <label class="btn btn-outline-secondary mx-2" for="user-tag-business">Business</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-technology" id="user-tag-technology" value="TECHNOLOGY" autocomplete="off">
+                  <label class="btn btn-outline-secondary mx-2" for="user-tag-technology">Technology</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-entertainment" id="user-tag-entertainment" value="ENTERTAINMENT" autocomplete="off">
+                  <label class="btn btn-outline-secondary mx-2" for="user-tag-entertainment">Entertainment</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-sports" id="user-tag-sports" value="SPORTS" autocomplete="off">
+                  <label class="btn btn-outline-secondary mx-2" for="user-tag-sports">Sports</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-science" id="user-tag-science" value="SCIENCE" autocomplete="off">
+                  <label class="btn btn-outline-secondary mx-2" for="user-tag-science">Science</label><br>
+                  <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-health" id="user-tag-health" value="HEALTH" autocomplete="off">
+                  <label class="btn btn-outline-secondary mx-2" for="user-tag-health">Health</label><br>
                   <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-example" id="user-tag-example" value="EXAMPLE" autocomplete="off">
-                  <label class="btn btn-outline-secondary" for="user-tag-example">example</label><br>
+                  <label class="btn btn-outline-secondary mx-2" for="user-tag-example">example</label><br>
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -553,16 +593,23 @@
           <form id="tag-edit-form" class="visibility-hidden"></form>
           <div id="current-article-tags" class="tags-list-in-modal">
           </div>
-          <label for="searchTags">Search tag:</label>
-          <input list="tags-search-list" id="searchTags" name="tagName" autocomplete="off" />
-          <datalist id="tags-search-list">
-            <option value="APPLE"></option>
-          </datalist>
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Add tag</button>
+          <div class="d-flex">
+            <div class="col">
+              <label for="search-tags" class="form-label">Search tag:</label>
+              <input list="tags-search-list" id="search-tags" name="tagName" autocomplete="off" class="form-control" />
+              <datalist id="tags-search-list">
+                <option value="APPLE"></option>
+              </datalist>
+              <button id="search-tag-add" type="button" class="btn btn-primary my-2">Add tag</button>
+            </div>
+            <!-- <div class="col-auto">
+
+            </div> -->
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="submit" form="tag-edit-form" class="btn btn-primary">Apply</button>
+          <button id="submit-tag-edit-btn" type="submit" form="tag-edit-form" class="btn btn-primary">Apply</button>
         </div>
       </div>
     </div>

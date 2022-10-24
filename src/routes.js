@@ -12,6 +12,7 @@ import removeFromReadingList from "./schemas/remove-from-reading-list.js";
 import updateProfile from "./schemas/update-profile.js";
 import showOwnArticleTags from "./schemas/show-own-article.js";
 import indexMatchingTags from "./schemas/index-matching-tags.js";
+import editTagsSchema from "./schemas/update-own-article-tags.js";
 
 const router = Router();
 
@@ -72,6 +73,14 @@ router.post(
   authenticateUser("json"),
   checkData(indexMatchingTags),
   (await import("./controllers/api/my/reading-list/articles/tags/index.js"))
+    .default
+);
+
+router.put(
+  "/api/my/reading-list/articles/tags",
+  authenticateUser("json"),
+  checkData(editTagsSchema),
+  (await import("./controllers/api/my/reading-list/articles/tags/update.js"))
     .default
 );
 

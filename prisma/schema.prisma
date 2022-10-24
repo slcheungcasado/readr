@@ -57,6 +57,7 @@ model Article {
 model Tag {
   id                 Int                  @id @default(autoincrement())
   name               String               @unique
+  isDeletable        Boolean              @default(false)
   articles           Article[]
   readingListArticle ReadingListArticle[]
 }
