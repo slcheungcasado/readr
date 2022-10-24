@@ -173,15 +173,10 @@ body {
   }
 }
 
-// #current-article-tags {
-//   display: flex;
-//   flex-wrap: wrap;
-//   justify-content: space-around;
-//   label {
-//     margin-top: 5px;
-//     margin-bottom: 5px;
-//   }
-// }
+.active-button {
+  background-color: $bg-accent;
+  border-color: $bg-accent-border;
+}
 
 .remove-tag-button {
   margin-right: 5px;

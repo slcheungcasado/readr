@@ -1,6 +1,5 @@
 import handleErrors from "../../_helpers/handle-errors.js";
 
-// import news from "gnews";
 import * as neoGnews from "../../_helpers/neo-gnews.js";
 
 import { cacheIfNeeded } from "../../_helpers/prisma-is-cached.js";
@@ -13,10 +12,6 @@ export default async function (req, res) {
     const { q = "" } = req.query;
     let { doCache = false } = req.query;
     doCache = !!doCache;
-    // Filters (Not really possible directly, just specify different endpoints instead)
-    // const q = req.query.q || "";
-    // const orderBy = req.query.orderBy || "id";
-    // const sortBy = req.query.sortBy || "asc";
 
     // Pagination
     const take = 10;
@@ -94,7 +89,7 @@ export default async function (req, res) {
       matchedRecords = await prisma.article.count({ where: { ...whereQuery } });
     }
 
-    console.log(`Found ${articles.length} articles`);
+    // console.log(`Found ${articles.length} articles`);
     return res.status(200).json({
       articles: articles,
       meta: {

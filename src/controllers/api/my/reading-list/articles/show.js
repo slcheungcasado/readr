@@ -7,10 +7,7 @@ export default async function (req, res) {
     let { tagsOnly = false } = req.query;
     tagsOnly = !!tagsOnly;
     const { id } = req.params;
-    // console.log("id", id);
-    // console.log("req.params", req.params);
-    // console.log("req.query", req.query);
-    // console.log("tagsOnly", tagsOnly);
+
     const selectQuery = tagsOnly
       ? {
           select: {

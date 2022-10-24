@@ -7,34 +7,13 @@ export default async function (req, res) {
     const { q = "" } = req.query;
 
     // tag filtering
-    let defaultTags = [];
     let userTags = [];
     for (let [key, value] of Object.entries(req.query)) {
-      console.log(key, value);
-      if (key.startsWith("default-tag")) {
-        defaultTags.push(value);
-      } else if (key.startsWith("user-tag")) {
+      if (key.startsWith("user-tag")) {
         userTags.push(value);
       }
     }
 
-    // console.log("defaultTags.length > 0", defaultTags.length > 0);
-    const articleTagsFilter =
-      defaultTags.length > 0
-        ? {
-            article: {
-              tags: {
-                some: {
-                  name: {
-                    in: defaultTags,
-                  },
-                },
-              },
-            },
-          }
-        : {};
-
-    // console.log("defaultTags.length > 0", defaultTags.length > 0);
     const ownArticleTagsFilter =
       userTags.length > 0
         ? {
@@ -48,10 +27,7 @@ export default async function (req, res) {
           }
         : {};
 
-    // if (req?.query) console.log("req.query", req.query);
-    // Filters (Not really possible directly, just specify different endpoints instead)
-    // const q = req.query.q || "";
-    // const orderBy = req.query.orderBy || "id";
+    // Filters
     // const sortBy = req.query.sortBy || "asc";
 
     // Pagination
@@ -61,7 +37,6 @@ export default async function (req, res) {
 
     let matchedRecords = 0;
     let articles = [];
-    // let topic = "HEADLINE";
     const whereQuery = q
       ? {
           OR: [
@@ -77,17 +52,9 @@ export default async function (req, res) {
           ],
         }
       : {};
-    // tags: {
-    //   some: {
-    //     name: {
-    //       equals: topic,
-    //     },
-    //   },
-    // },
     const prismaQuery = {
       where: {
         ...whereQuery,
-        ...articleTagsFilter,
         ...ownArticleTagsFilter,
         readingList: {
           userId,
@@ -111,7 +78,6 @@ export default async function (req, res) {
     matchedRecords = await prisma.readingListArticle.count({
       where: {
         ...whereQuery,
-        ...articleTagsFilter,
         ...ownArticleTagsFilter,
         readingList: {
           userId,
@@ -119,7 +85,6 @@ export default async function (req, res) {
       },
     });
 
-    console.log(`Found ${matchedRecords} articles`);
     return res.status(200).json({
       articles: articles,
       meta: {

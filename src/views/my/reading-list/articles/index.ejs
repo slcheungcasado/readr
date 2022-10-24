@@ -1,16 +1,37 @@
 <%- contentFor('styles') %>
 <%- contentFor('scripts') %>
 <script>
+  const toTitleCase = (str) => {
+    return str.toLowerCase().replace(/(^|\s)[a-z]/gm, (x) => x.toUpperCase());
+  }
+
+  const secondsToHoursMinutes = (seconds) => {
+    const hours = Math.trunc(seconds / 3600);
+    const minutes = Math.ceil(seconds / 60) - (hours * 60);
+    return `${(hours > 0)? `${hours} hr `: ''}` + `${(minutes > 0)? `${minutes} min`: ''}`
+  }
+
+  let prevFiltersChecked = {};
+
+  const updateCheckedFilters = (e) => {
+    prevFiltersChecked = {};
+    for (let el of $("#own-tag-filters-section")?.find('input[type="checkbox"]:checked')) {
+      prevFiltersChecked[$(el).attr('id')] = true;
+    }
+
+    if (Object.keys(prevFiltersChecked).length === 0) {
+      $("#index-search-filters-btn").removeClass("active-button");
+    } else {
+      $("#index-search-filters-btn").addClass("active-button");
+    }
+  }
+
   const getOwnArticles = () => {
-    console.log("Fetching own-articles...");
     toggleLoadOverLay();
     axios({
       method: 'GET',
-      // url: 'https://dev.to/api/articles',
-      // url: '/api/my/subscriptions/devto'
       url: '/api/my/reading-list',
     }).then((resp) => {
-      // console.log(resp);
       generatePage({
         articles: resp.data.articles,
         meta: resp.data.meta,
@@ -30,7 +51,6 @@
   const replaceEditTagModalContent = (article) => {
     const $tagsList = $("#current-article-tags");
     $tagsList.html(refreshTagsList(article));
-    console.log('replaceEditTagModalContent', article);
     $("#submit-tag-edit-btn").attr("data-own-article-id", article.id);
   }
 
@@ -41,7 +61,15 @@
 
   const makeTag = (tag) => {
     return `
-    <input form="tag-edit-form" type="text" class="btn-check" name="user-tag-${tag.name}" id="user-tag-${tag.name}" value="${tag.name.toUpperCase()}" autocomplete="off">
+    <input
+      form="tag-edit-form"
+      type="text"
+      class="btn-check"
+      name="user-tag-${tag.name}"
+      id="user-tag-${tag.name}"
+      value="${tag.name.toUpperCase()}"
+      autocomplete="off"
+    />
     <label class="btn btn-secondary mx-2" for="user-tag-${tag.name}">
       <span class="btn-close btn-close-white remove-tag-button" data-tag-id="${tag.id}"></span>
       ${tag.name}
@@ -58,17 +86,10 @@
     }).join('');
   }
 
-  const secondsToHoursMinutes = (seconds) => {
-    // console.log("secondsToHoursMinutes()", seconds);
-    const hours = Math.trunc(seconds / 3600);
-    const minutes = Math.ceil(seconds / 60) - (hours * 60);
-    return `${(hours > 0)? `${hours} hr `: ''}` + `${(minutes > 0)? `${minutes} min`: ''}`
-  }
-
   const generateTitle = ({
     info
   } = {}) => {
-    return `<h1 class="text-center">News Articles</h1>`;
+    return `<h1 class="text-center">My List</h1>`;
   }
 
   const generateArticle = (readingListArticle, meta) => {
@@ -131,7 +152,6 @@
     articles,
     meta
   } = {}) => {
-    console.log("articles in generateArticles", articles);
     if (articles?.length > 0) {
       return `
       <div id="cards-section" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-4 g-4">
@@ -147,9 +167,7 @@
       currentPage,
       totalPages
     } = info.meta;
-    console.log("This happens before", currentPage, totalPages);
     if ($(".load-overlay").hasClass('visually-hidden')) return '';
-    console.log("This happens", currentPage, totalPages);
 
     let links = ''
     if (totalPages > 2 && currentPage > 1) links += `<li class="page-item"><a class="page-link" href="#" data-page="1">First</a></li>`
@@ -169,7 +187,45 @@
           `
   }
 
-  const updateOwnSearchFilters = (info) => {
+  const generateOwnSearchFilters = (ownTags) => {
+    return Object.entries(ownTags).map((([id, name]) => {
+      const nameAsUpper = name?.toUpperCase() || '';
+      return `
+      <input
+        form="index-search-form"
+        type="checkbox"
+        class="btn-check"
+        name="user-tag-${nameAsUpper}"
+        id="user-tag-${nameAsUpper}"
+        value="${nameAsUpper}"
+        autocomplete="off"
+        ${(prevFiltersChecked[`user-tag-${nameAsUpper}`])? 'checked' : '' }
+      />
+      <label class="btn btn-outline-secondary mx-2" for="user-tag-${nameAsUpper}">${toTitleCase(name)}</label><br>
+      `
+    })).join('');
+  }
+
+  const updateOwnSearchFilters = () => {
+
+    axios({
+      method: "POST",
+      url: "/api/my/reading-list/articles/tags",
+      data: {
+        tagName: '',
+        showMine: true,
+      }
+    }).then((resp) => {
+      const ownTags = {};
+      resp.data.tags.forEach((tag) => {
+        ownTags[tag.id] = tag.name;
+      });
+      $("#own-tag-filters-section").html(generateOwnSearchFilters(ownTags));
+    }).catch((err) => {
+      console.error(err);
+    }).finally(() => {
+
+    });
 
   }
 
@@ -187,7 +243,6 @@
 
   const handlePageChange = (e) => {
     e.preventDefault();
-    // console.log("handlePageChange called");
     toggleLoadOverLay();
 
     /*
@@ -195,18 +250,20 @@
     otherwise, the pagination is for whichever is the active topic
     */
 
-    const query = parseFormData(new FormData($('#index-search-form')[0]));
+    let queries = parseFormData(new FormData($('#index-search-form')[0]));
     const page = $(e.currentTarget).data('page');
-    console.log("query", query);
-    console.log("page", page);
-    if (query?.q) {
+
+    queries = {
+      page,
+      ...queries,
+    }
+    if (queries?.q) {
       //do pagination for search result
       axios({
         method: 'GET',
         url: '/api/my/reading-list',
         params: {
-          page,
-          ...query
+          ...queries
         }
       }).then((resp) => {
         generatePage({
@@ -227,7 +284,8 @@
         method: 'GET',
         url: '/api/my/reading-list',
         params: {
-          page
+          page,
+          ...queries
         }
       }).then((resp) => {
         generatePage({
@@ -250,11 +308,6 @@
     e.preventDefault();
     toggleLoadOverLay();
     let queries = parseFormData(new FormData(e.currentTarget));
-    let queriesFilter = parseFormData(new FormData($('#filters-form')[0]))
-    queries = {
-      ...queries,
-      ...queriesFilter
-    }
     axios({
       method: "GET",
       url: "/api/my/reading-list",
@@ -291,8 +344,6 @@
   const handleBookmarkArticle = (e) => {
     e.preventDefault();
     toggleLoadOverLay();
-    // console.log("handleBookmarkArticle called");
-    // console.log(e.currentTarget, e.$target);
     const $button = $(e.currentTarget)
     const articleId = $button.data('article-id');
 
@@ -345,7 +396,7 @@
     });
   }
 
-  const handleEditTag = (e) => {
+  const showEditTagModal = (e) => {
     console.log(e.currentTarget, e.$target);
     e.preventDefault();
     toggleLoadOverLay();
@@ -363,7 +414,7 @@
       }
     }).then((resp) => {
       replaceEditTagModalContent(resp.data.articles)
-      console.log(resp?.data);
+      // console.log(resp?.data);
     }).catch((err) => {
       console.error(err);
       generatePage({
@@ -378,9 +429,9 @@
   const handleTagEdit = (e) => {
     e.preventDefault();
     const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
-    console.log("Tag Edit Details submitted");
-    console.log('formData', formData);
-    console.log('ownArticleId', $("#submit-tag-edit-btn").data('ownArticleId'));
+    // console.log("Tag Edit Details submitted");
+    // console.log('formData', formData);
+    // console.log('ownArticleId', $("#submit-tag-edit-btn").data('ownArticleId'));
     const ownArticleId = $("#submit-tag-edit-btn").data('ownArticleId')
 
     axios({
@@ -498,6 +549,7 @@
   $(document).ready(() => {
     getOwnArticles();
 
+    $("#filtersModal").on('hidden.bs.modal', updateCheckedFilters)
     $("#own-articles-search-section").on('submit', "#index-search-form", handleSearch);
 
     const $editTagsModal = $("#editTagsModal");
@@ -510,7 +562,7 @@
     const $ownArticlesIndex = $("#pages-own-articles-index");
     $ownArticlesIndex.on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
     $ownArticlesIndex.on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);
-    $ownArticlesIndex.on('click', 'div.card-actions button.btn-outline-info[data-own-article-id]', handleEditTag);
+    $ownArticlesIndex.on('click', 'div.card-actions button.btn-outline-info[data-own-article-id]', showEditTagModal);
     $ownArticlesIndex.on('click', 'div.card-actions button.btn-outline-danger[data-article-id]', handleRemoveBookmark);
   });
 </script>
@@ -533,7 +585,7 @@
                   <h1 class="modal-title fs-5" id="filtersModalLabel">Please select your search filters</h1>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body tags-list-in-modal">
+                <!-- <div class="modal-body tags-list-in-modal">
                   <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-headline" id="user-tag-headline" value="HEADLINE" autocomplete="off">
                   <label class="btn btn-outline-secondary mx-2" for="user-tag-headline">Headline</label><br>
                   <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-world" id="user-tag-world" value="WORLD" autocomplete="off">
@@ -552,18 +604,19 @@
                   <label class="btn btn-outline-secondary mx-2" for="user-tag-science">Science</label><br>
                   <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-health" id="user-tag-health" value="HEALTH" autocomplete="off">
                   <label class="btn btn-outline-secondary mx-2" for="user-tag-health">Health</label><br>
-                  <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-example" id="user-tag-example" value="EXAMPLE" autocomplete="off">
-                  <label class="btn btn-outline-secondary mx-2" for="user-tag-example">example</label><br>
+                </div> -->
+                <div id="own-tag-filters-section" class="modal-body tags-list-in-modal">
+                  <!-- <input form="index-search-form" type="checkbox" class="btn-check" name="user-tag-example" id="user-tag-example" value="EXAMPLE" autocomplete="off">
+                  <label class="btn btn-outline-secondary mx-2" for="user-tag-example">example</label><br> -->
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <!-- <button type="button" class="btn btn-primary">Apply</button> -->
                 </div>
               </div>
             </div>
           </div>
         </form>
-        <button id="index-search-btn" class="btn btn-secondary" type="button" data-bs-toggle="modal" data-bs-target="#filtersModal">
+        <button id="index-search-filters-btn" class="btn btn-secondary" type="button" data-bs-toggle="modal" data-bs-target="#filtersModal">
           <span>Filters</span>
           <i class="fas fa-filter"></i>
         </button>
@@ -598,13 +651,10 @@
               <label for="search-tags" class="form-label">Search tag:</label>
               <input list="tags-search-list" id="search-tags" name="tagName" autocomplete="off" class="form-control" />
               <datalist id="tags-search-list">
-                <option value="APPLE"></option>
+                <!-- <option value="APPLE"></option> -->
               </datalist>
               <button id="search-tag-add" type="button" class="btn btn-primary my-2">Add tag</button>
             </div>
-            <!-- <div class="col-auto">
-
-            </div> -->
           </div>
         </div>
         <div class="modal-footer">
