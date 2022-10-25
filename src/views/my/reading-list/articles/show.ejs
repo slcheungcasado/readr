@@ -19,8 +19,16 @@
 
   const extractNumberParamFromURL = (url) => {
     const link = new URL(url);
-    const matches = link.pathname.match(/\/(?<id>\d+)/);
+    const pattern = /\/(?<id>\d+)/;
+    const matches = link.pathname.match(pattern);
     return matches?.groups?.id || '';
+  }
+
+  const extractFilenameFromURL = (url) => {
+    const link = new URL(url);
+    const pattern = /\/(?<filename>\w*\.\w+)/;
+    const matches = link.pathname.match(pattern);
+    return matches?.groups?.filename || '';
   }
 
   const shortenTitle = (title) => {
@@ -48,7 +56,7 @@
     }).catch((err) => {
       console.error(err);
     }).finally(() => {
-      console.log('never happens?')
+      // console.log('never happens?');
       toggleLoadOverLay();
     });
   }
@@ -87,7 +95,7 @@
   }
 
   const generateTags = (article) => {
-    console.log('generateTags article', article)
+    // console.log('generateTags article', article)
     return (article?.tags?.length == 0) ? '' : article?.tags.map(tag => {
       return (tag?.name) ? `<small class="badge rounded-pill text-bg-secondary m-2">${tag.name}</small>` : ''
     }).join('');
@@ -104,7 +112,7 @@
     meta = {}
   }) => {
     const article = readingListArticle?.article || {};
-    console.log('refreshArticleActions article', article);
+    // console.log('refreshArticleActions article', article);
     const html = `
     <button
       class="btn btn-danger mx-2"
@@ -125,6 +133,11 @@
     $("#own-article-actions").html(html);
     return;
   }
+  const imageIsNotInContent = (url, content) => {
+    const filename = extractFilenameFromURL(url);
+    return (filename) ? !content?.includes(filename) : '';
+  }
+
 
   const generateArticleContent = ({
     articles: readingListArticle = {},
@@ -137,14 +150,14 @@
       day: 'numeric'
     };
 
-    console.log('generateArticleContent readingListArticle', readingListArticle);
-    console.log('generateArticleContent meta', meta);
+    // console.log('generateArticleContent readingListArticle', readingListArticle);
+    // console.log('generateArticleContent meta', meta);
 
     const userTags = readingListArticle?.tags || [];
-    article = readingListArticle?.article || {};
+    const article = readingListArticle?.article || {};
 
-    console.log('userTags', userTags);
-    console.log('article', article);
+    // console.log('userTags', userTags);
+    // console.log('article', article);
     return `
       <div class="article-content">
         <div class="article-meta-data">
@@ -204,7 +217,7 @@
           </div>
           `
           : '' }
-        ${(article?.image)? `
+        ${(article?.image && imageIsNotInContent(article.image, article.content))? `
           <div class="article-thumbnail-section">
             <img
               src="${(article.image)}"
@@ -277,7 +290,7 @@
     const tagName = $(e.currentTarget)?.val() || '';
     const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
 
-    console.log('handleTagSearch formData', formData)
+    // console.log('handleTagSearch formData', formData)
 
     if (code == 8 || code == 9 ||
       code == 46 || code == 95 || code == 189 ||
@@ -295,7 +308,7 @@
           }
         }
       }).then((resp) => {
-        console.log(resp.data);
+        // console.log(resp.data);
         $("#tags-search-list").html(refreshTagsSearchResult(resp.data.tags));
       }).catch(err => {
         console.error(err);
@@ -475,7 +488,7 @@
 
   const showEditTagModal = (e) => {
     // console.log(e.currentTarget, e.$target);
-    console.log('showEditTagModal', e.currentTarget, e.$target);
+    // console.log('showEditTagModal', e.currentTarget, e.$target);
     e.preventDefault();
     toggleLoadOverLay();
     // console.log("handleBookmarkArticle called");
@@ -517,7 +530,7 @@
         currTags: formData,
       }
     }).then((resp) => {
-      console.log(resp.data)
+      // console.log(resp.data)
     }).catch((err) => {
       console.error(err)
     }).finally(() => {
@@ -534,8 +547,8 @@
     $label?.remove();
     $input?.remove();
 
-    console.log('label', $label);
-    console.log('input', $input);
+    // console.log('label', $label);
+    // console.log('input', $input);
   }
 
   const handleAppendTagList = (e) => {
@@ -552,7 +565,7 @@
       $("#search-tags").val('');
       $("#tags-search-list").html('');
     } else {
-      console.log('tagName', tagName, 'CANT be added');
+      // console.log('tagName', tagName, 'CANT be added');
     }
   }
 
