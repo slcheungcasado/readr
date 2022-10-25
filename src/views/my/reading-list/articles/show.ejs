@@ -1,0 +1,586 @@
+<%- contentFor('styles') %>
+<link rel="stylesheet" href="/scss/read.scss">
+
+<%- contentFor('scripts') %>
+<script>
+  const toTitleCase = (str) => {
+    return str.toLowerCase().replace(/(^|\s)[a-z]/gm, (x) => x.toUpperCase());
+  }
+
+  const secondsToHoursMinutes = (seconds) => {
+    const hours = Math.trunc(seconds / 3600);
+    const minutes = Math.ceil(seconds / 60) - (hours * 60);
+    return `${(hours > 0)? `${hours} hr `: ''}` + `${(minutes > 0)? `${minutes} min`: ''}`
+  }
+
+  const redirectToSelf = (e) => {
+    window.location.reload();
+  }
+
+  const extractNumberParamFromURL = (url) => {
+    const link = new URL(url);
+    const matches = link.pathname.match(/\/(?<id>\d+)/);
+    return matches?.groups?.id || '';
+  }
+
+  const shortenTitle = (title) => {
+    const end = title.lastIndexOf(' - ');
+    return (end > 0) ? title.slice(0, end) : title;
+  }
+
+  let prevFiltersChecked = {};
+
+  const updateCheckedFilters = (e) => {
+    prevFiltersChecked = {};
+    for (let el of $("#own-tag-filters-section")?.find('input[type="checkbox"]:checked')) {
+      prevFiltersChecked[$(el).attr('id')] = true;
+    }
+
+    if (Object.keys(prevFiltersChecked).length === 0) {
+      $("#index-search-filters-btn").removeClass("active-button");
+    } else {
+      $("#index-search-filters-btn").addClass("active-button");
+    }
+  }
+
+  let id = window.location.pathname.split('/').at(-1);
+
+  const getOwnArticle = () => {
+    toggleLoadOverLay();
+    id = extractNumberParamFromURL(window.location);
+
+
+
+
+    // try {
+    //   const resp = await axios({
+    //     method: 'GET',
+    //     url: `/api/my/reading-list/${id}`,
+    //   });
+    // } catch (err) {
+    //   console.error(err);
+    // } finally {
+    //   console.log('never happens?')
+    //   toggleLoadOverLay();
+    // }
+
+    axios({
+      method: 'GET',
+      url: `/api/my/reading-list/articles/${id}`,
+
+    }).then((resp) => {
+      console.log(resp.data.articles)
+      generatePage({
+        articles: resp.data.articles,
+        meta: resp.data.meta,
+      });
+    }).catch((err) => {
+      console.error(err);
+    }).finally(() => {
+      console.log('never happens?')
+      toggleLoadOverLay();
+    });
+  }
+
+
+
+  const replaceEditTagModalContent = (article) => {
+    const $tagsList = $("#current-article-tags");
+    $tagsList.html(refreshTagsList(article));
+    $("#submit-tag-edit-btn").attr("data-own-article-id", article.id);
+  }
+
+  const refreshTagsSearchResult = (tags) => {
+    if (tags?.length == 0) return '';
+    return tags.map((tag) => `<option value=${tag.name} data-tag-id="${tag?.id}"></option>`).join('');
+  }
+
+  const makeTag = (tag) => {
+    return `
+    <input
+      form="tag-edit-form"
+      type="text"
+      class="btn-check"
+      name="user-tag-${tag.name}"
+      id="user-tag-${tag.name}"
+      value="${tag.name.toUpperCase()}"
+      autocomplete="off"
+    />
+    <label class="btn btn-secondary mx-2" for="user-tag-${tag.name}">
+      <span class="btn-close btn-close-white remove-tag-button" data-tag-id="${tag.id}"></span>
+      ${tag.name}
+    </label>`
+  }
+
+  const refreshTagsList = (article) => {
+    return article?.tags.map(tag => (tag?.name) ? makeTag(tag) : '').join('') || '';
+  }
+
+  const generateTags = (article) => {
+    console.log('generateTags article', article)
+    return (article?.tags?.length == 0) ? '' : article?.tags.map(tag => {
+      return (tag?.name) ? `<small class="badge rounded-pill text-bg-secondary m-2">${tag.name}</small>` : ''
+    }).join('');
+  }
+
+  const generateTitle = ({
+    info
+  } = {}) => {
+    return `<h1 class="text-center">My List</h1>`;
+  }
+
+  const refreshArticleActions = ({
+    articles: readingListArticle = {},
+    meta = {}
+  }) => {
+    const article = readingListArticle?.article || {};
+    console.log('refreshArticleActions article', article);
+    const html = `
+    <button
+      class="btn btn-danger mx-2"
+      data-article-id="${(article?.id)? article.id : null}"
+    >
+      <i class="fas fa-bookmark"></i>
+      <span>Remove Bookmark</span>
+    </button>
+    <button
+      class="btn btn-info mx-2"
+      data-bs-toggle="modal"
+      data-bs-target="#editTagsModal"
+      data-own-article-id="${(readingListArticle?.id)? readingListArticle.id : null}"
+    >
+      <i class="fas fa-tag"></i>
+      <span>Edit Tags</span>
+    </button>`
+    $("#own-article-actions").html(html);
+    return;
+  }
+
+  const generateArticleContent = ({
+    articles: readingListArticle = {},
+    meta = {}
+  }) => {
+    const options = {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    };
+
+    console.log('generateArticleContent readingListArticle', readingListArticle);
+    console.log('generateArticleContent meta', meta);
+
+    const userTags = readingListArticle?.tags || [];
+    article = readingListArticle?.article || {};
+
+    console.log('userTags', userTags);
+    console.log('article', article);
+    return `
+      <div class="article-content">
+        <div class="article-meta-data">
+          <ul class="article-meta-data-list">
+            ${(article?.url)? `
+            <li class="article-source-url">
+              <i class="fas fa-link"></i>
+              <span>
+                Source:
+                <strong class="text-muted">
+                  <a class="text-dark" href="${(article?.url)? article.url : "#"}">
+                    ${(article?.sourceName)? article.sourceName : ""}
+                  </a>
+                </strong>
+              </span>
+            </li>
+            `
+            : ''}
+            ${(article?.pubDate)? `
+            <li class="article-publication-date">
+              <i class="fas fa-calendar"></i>
+              <span>
+                <small class="text-muted">
+                  ${new Date(article.pubDate).toLocaleDateString("en-US", options)}
+                </small>
+              </span>
+            </li>
+            `
+            : ''}
+            ${(article?.author)? `
+            <li class="article-author">
+              <i class="fas fa-pencil-alt"></i>
+              <span>
+                <i class="article-author">${article.author}</i>
+              </span>
+            </li>
+            `
+            : ''}
+            ${(article?.readingTime)? `
+              <li class="article-reading-time">
+                <i class="fas fa-clock"></i>
+                <span>
+                  <small>
+                    ${secondsToHoursMinutes(article.readingTime)} read
+                  </small>
+                </span>
+              </li>
+              `
+              : ''}
+          </ul>
+        </div>
+        ${(article?.title)? `
+          <div class="article-title-section">
+            <h1 class="article-title">
+              ${shortenTitle(article.title)}
+            </h1>
+          </div>
+          `
+          : '' }
+        ${(article?.image)? `
+          <div class="article-thumbnail-section">
+            <img
+              src="${(article.image)}"
+              class="article-thumbnail"
+            />
+          </div>
+          ` : ''}
+        ${(userTags?.length > 0)? `
+          <div class="article-tags-section">
+            ${generateTags(readingListArticle)}
+          </div>
+          ` : ''}
+        <div class="article-main-content">
+          ${(article?.content)? article.content : `<h3 class="text-center">This content is protected, please visit the original source directly or check out the related links below.</h3>`}
+        </div>
+        <div class="article-related-links">
+          <h4>Related Links:</h4>
+          ${(article?.relatedLinks)? article.relatedLinks : `<h5 class="text-center">No related links found.</h5>`}
+        </div>
+
+      </div>
+    `
+
+    // <div class="article-main-content">
+    // ${(article?.content)? `${article.content}` : `<h3 class="text-center">This content is protected, please visit the main source directly or check out the related links below.</h3>`}
+    // </div>
+
+    // return `
+    // <div class="col">
+    //   <div class="card h-100">
+    //     <img src="${(article?.image)? article.image : "/imgs/olive-pfp.jpeg"}" class="card-img-top card-image" alt="card-image">
+    //     <div class="card-body text-dark">
+    //       <div class="card-source-info">
+    //         <strong class="article-source-name">
+    //           <a class="text-dark" href="${(article?.sourceURL)? article.sourceURL : " #"}">
+    //             ${(article?.sourceName)? article.sourceName : ""}
+    //           </a>
+    //         </strong>
+    //         <i class="article-author">${(article?.author)? article.author : ""}</i>
+    //         <small class="text-muted article-pubdate">${(article?.pubDate)? new Date(article.pubDate).toLocaleDateString("en-US", options) : ""}</small>
+    //       </div>
+    //       <div class="card-title-wrapper">
+    //         <h5 class="card-title">
+    //           <a class="text-dark" href="${(article?.url)? article.url : " #"}">
+    //             ${(article?.title)? shortenTitle(article.title) : "Card Title"}</a>
+    //         </h5>
+    //         <div class="card-tags-section">
+    //           ${generateTags(readingListArticle)}
+    //         </div>
+    //       </div>
+    //       <p class="card-text line-clamp">${(article?.description)? article.description: ""}</p>
+    //     </div>
+    //     <div class="card-bottom-readinglist">
+    //       <div class="card-actions">
+    //         <button class="btn btn-outline-secondary" data-own-article-id="${(readingListArticle?.id)? readingListArticle.id : null}">
+    //           <i class="fas fa-eye"></i>
+    //           <span>Read <small>${(article?.readingTime)? '(' + secondsToHoursMinutes(article.readingTime) + ')' : ''}</small></span>
+    //         </button>
+    //       </div>
+    //     </div>
+    //   </div>
+    // </div>
+    // `;
+  }
+
+
+  const updateOwnSearchFilters = () => {
+
+    axios({
+      method: "POST",
+      url: "/api/my/reading-list/articles/tags",
+      data: {
+        tagName: '',
+        showMine: true,
+      }
+    }).then((resp) => {
+      const ownTags = {};
+      resp.data.tags.forEach((tag) => {
+        ownTags[tag.id] = tag.name;
+      });
+      $("#own-tag-filters-section").html(generateOwnSearchFilters(ownTags));
+    }).catch((err) => {
+      console.error(err);
+    }).finally(() => {
+
+    });
+
+  }
+
+  const generatePage = (info) => {
+    const $page = $("#pages-own-articles-show");
+    refreshArticleActions(info);
+    const $article = generateArticleContent(info);
+
+    // updateOwnSearchFilters(info);
+
+    $page.html('').append($article);
+  }
+
+
+  const handlePageChange = (e) => {
+    e.preventDefault();
+    toggleLoadOverLay();
+
+    /*
+    assumption: if search bar has content, then pagination is for that search
+    otherwise, the pagination is for whichever is the active topic
+    */
+
+    let queries = parseFormData(new FormData($('#index-search-form')[0]));
+    const page = $(e.currentTarget).data('page');
+
+    queries = {
+      page,
+      ...queries,
+    }
+    if (queries?.q) {
+      //do pagination for search result
+      axios({
+        method: 'GET',
+        url: '/api/my/reading-list',
+        params: {
+          ...queries
+        }
+      }).then((resp) => {
+        generatePage({
+          articles: resp.data.articles,
+          meta: resp.data.meta
+        });
+      }).catch((err) => {
+        console.error(err);
+        generatePage({
+          displayErr: true
+        });
+      }).finally(() => {
+        toggleLoadOverLay();
+      });
+    } else {
+      //get current topic
+      axios({
+        method: 'GET',
+        url: '/api/my/reading-list',
+        params: {
+          page,
+          ...queries
+        }
+      }).then((resp) => {
+        generatePage({
+          articles: resp.data.articles,
+          meta: resp.data.meta
+        });
+      }).catch((err) => {
+        console.error(err);
+        generatePage({
+          displayErr: true
+        });
+      }).finally(() => {
+        toggleLoadOverLay();
+      });
+    }
+
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    toggleLoadOverLay();
+    let queries = parseFormData(new FormData(e.currentTarget));
+    axios({
+      method: "GET",
+      url: "/api/my/reading-list",
+      params: {
+        ...queries
+      }
+    }).then((resp) => {
+      generatePage({
+        articles: resp.data.articles,
+        meta: resp.data.meta
+      });
+    }).catch((err) => {
+      console.error(err);
+      generatePage({
+        displayErr: true
+      });
+    }).finally(() => {
+      toggleLoadOverLay();
+    });
+  }
+
+  const toggleButtonType = ($button) => {
+    if ($button.hasClass('btn-outline-success')) {
+      $button.removeClass('btn-outline-success');
+      $button.addClass('btn-outline-danger');
+      $button.find('span').text('Remove Bookmark');
+    } else {
+      $button.removeClass('btn-outline-danger');
+      $button.addClass('btn-outline-success');
+      $button.find('span').text('Bookmark');
+    }
+  }
+
+  const handleBookmarkArticle = (e) => {
+    e.preventDefault();
+    toggleLoadOverLay();
+    const $button = $(e.currentTarget)
+    const articleId = $button.data('article-id');
+
+    axios({
+      method: 'POST',
+      url: '/api/my/reading-list/articles',
+      data: {
+        articleId
+      }
+    }).then((resp) => {
+      toggleButtonType($button)
+    }).catch((err) => {
+      console.error(err);
+      generatePage({
+        displayErr: true
+      });
+    }).finally(() => {
+      toggleLoadOverLay();
+    });
+  }
+
+
+  const handleRemoveBookmark = (e) => {
+    e.preventDefault();
+    toggleLoadOverLay();
+    const $button = $(e.currentTarget)
+    const articleId = $button.data('article-id');
+
+    axios({
+      method: 'DELETE',
+      url: '/api/my/reading-list/articles',
+      data: {
+        articleId
+      }
+    }).then((resp) => {
+      // generatePage({
+      // articles: resp.data.articles,
+      // meta: resp.data.meta
+      // });
+      toggleButtonType($button);
+    }).catch((err) => {
+      console.error(err);
+      generatePage({
+        displayErr: true
+      });
+    }).finally(() => {
+      toggleLoadOverLay();
+    });
+  }
+
+  const showEditTagModal = (e) => {
+    console.log(e.currentTarget, e.$target);
+    e.preventDefault();
+    toggleLoadOverLay();
+    // console.log("handleBookmarkArticle called");
+    // console.log(e.currentTarget, e.$target);
+    const $button = $(e.currentTarget)
+    $button?.prop("disabled", true);
+    const articleId = $button.data('own-article-id');
+    axios({
+      method: 'GET',
+      url: `/api/my/reading-list/articles/${articleId}`,
+      params: {
+        // id: articleId,
+        tagsOnly: true,
+      }
+    }).then((resp) => {
+      replaceEditTagModalContent(resp.data.articles)
+      // console.log(resp?.data);
+    }).catch((err) => {
+      console.error(err);
+      generatePage({
+        displayErr: true
+      });
+    }).finally(() => {
+      toggleLoadOverLay();
+      $button?.prop("disabled", false);
+    });
+  }
+
+  const handleTagEdit = (e) => {
+    e.preventDefault();
+    const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
+    const ownArticleId = $("#submit-tag-edit-btn").data('ownArticleId')
+
+    axios({
+      method: 'PUT',
+      url: '/api/my/reading-list/articles/tags',
+      data: {
+        id: ownArticleId,
+        currTags: formData,
+      }
+    }).then((resp) => {
+      console.log(resp.data)
+    }).catch((err) => {
+      console.error(err)
+    }).finally(() => {
+
+    });
+  }
+
+
+  const handleRemoveFromTagList = (e) => {
+    const $btn = $(e.currentTarget);
+    const $label = $btn?.closest('label');
+    const $input = $label?.siblings(`input[name=${$label?.attr('for')}]`);
+
+    $label?.remove();
+    $input?.remove();
+
+    console.log('label', $label);
+    console.log('input', $input);
+  }
+
+  const handleAppendTagList = (e) => {
+    const tagName = $("#search-tags")?.val() || '';
+    const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
+    const tagAsUpper = tagName.toUpperCase();
+    if (tagName && Object.values(formData).every(v => v.toUpperCase() !== tagAsUpper)) {
+      const match = $("#tags-search-list").find(`option[value="${tagAsUpper}"]`);
+      $("#current-article-tags").append(makeTag({
+        name: tagAsUpper,
+        id: match.data('tagId') || null,
+      }));
+
+      $("#search-tags").val('');
+      $("#tags-search-list").html('');
+    } else {
+      console.log('tagName', tagName, 'CANT be added');
+    }
+  }
+
+  $(document).ready(() => {
+    getOwnArticle();
+  });
+</script>
+
+
+<%- contentFor('body') %>
+<div id="pages-own-articles-show-wrapper" class="container-fluid">
+  <div id="own-article-actions" class="d-flex my-2 justify-content-end">
+    <!-- <button class="btn btn-secondary">Edit Tag</button>
+    <button class="btn btn-secondary">Remove Bookmark</button> -->
+  </div>
+  <div id="pages-own-articles-show"></div>
+</div>

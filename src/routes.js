@@ -94,13 +94,11 @@ router.delete(
 );
 
 // API | ARTICLES
-//index (also search/filter/pagination)
 router.get(
   "/api/articles",
   (await import("./controllers/api/articles/index.js")).default
 );
 
-//show
 router.get(
   "/api/articles/:topic",
   (await import("./controllers/api/articles/show.js")).default
@@ -134,6 +132,11 @@ router.get(
   "/my/reading-list",
   (await import("./controllers/pages/my/reading-list/articles/index.js"))
     .default
+);
+
+router.get(
+  "/my/reading-list/articles/:id",
+  (await import("./controllers/pages/my/reading-list/articles/show.js")).default
 );
 
 // PAGES | ARTICLES

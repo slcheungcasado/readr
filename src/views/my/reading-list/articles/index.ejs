@@ -137,10 +137,10 @@
               <i class="fas fa-tag"></i>
               <span>Edit Tags</span>
             </button>
-            <button class="btn btn-outline-secondary" data-own-article-id="${(readingListArticle?.id)? readingListArticle.id : null}">
+            <a class="btn btn-outline-secondary" href="/my/reading-list/articles/${(readingListArticle?.id)? readingListArticle.id : ''}">
               <i class="fas fa-eye"></i>
               <span>Read <small>${(article?.readingTime)? '(' + secondsToHoursMinutes(article.readingTime) + ')' : ''}</small></span>
-            </button>
+            </a>
           </div>
         </div>
       </div>
