@@ -108,7 +108,7 @@
     const html = `
     <button
       class="btn btn-danger mx-2"
-      data-article-id="${(article?.id)? article.id : null}"
+      data-own-article-id="${(article?.id)? article.id : null}"
     >
       <i class="fas fa-bookmark"></i>
       <span>Remove Bookmark</span>
@@ -409,13 +409,13 @@
   }
 
   const toggleButtonType = ($button) => {
-    if ($button.hasClass('btn-outline-success')) {
-      $button.removeClass('btn-outline-success');
-      $button.addClass('btn-outline-danger');
+    if ($button.hasClass('btn-success')) {
+      $button.removeClass('btn-success');
+      $button.addClass('btn-danger');
       $button.find('span').text('Remove Bookmark');
     } else {
-      $button.removeClass('btn-outline-danger');
-      $button.addClass('btn-outline-success');
+      $button.removeClass('btn-danger');
+      $button.addClass('btn-success');
       $button.find('span').text('Bookmark');
     }
   }
@@ -424,7 +424,7 @@
     e.preventDefault();
     toggleLoadOverLay();
     const $button = $(e.currentTarget)
-    const articleId = $button.data('article-id');
+    const articleId = $button.data('own-article-id');
 
     axios({
       method: 'POST',
@@ -449,7 +449,7 @@
     e.preventDefault();
     toggleLoadOverLay();
     const $button = $(e.currentTarget)
-    const articleId = $button.data('article-id');
+    const articleId = $button.data('own-article-id');
 
     axios({
       method: 'DELETE',
@@ -567,8 +567,8 @@
     $editTagsModal.on('hidden.bs.modal', redirectToSelf);
 
     const $ownArticleActions = $("#own-article-actions");
-    $ownArticleActions.on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);
-    $ownArticleActions.on('click', 'div.card-actions button.btn-outline-danger[data-article-id]', handleRemoveBookmark);
+    $ownArticleActions.on('click', 'button.btn-success[data-own-article-id]', handleBookmarkArticle);
+    $ownArticleActions.on('click', 'button.btn-danger[data-own-article-id]', handleRemoveBookmark);
     $ownArticleActions.on('click', 'button.btn-info[data-own-article-id]', showEditTagModal);
 
   });
