@@ -130,12 +130,14 @@ router.get(
 // PAGES | MY ARTICLES | AUTH REQUIRED
 router.get(
   "/my/reading-list",
+  authenticateUser("html"),
   (await import("./controllers/pages/my/reading-list/articles/index.js"))
     .default
 );
 
 router.get(
   "/my/reading-list/articles/:id",
+  authenticateUser("html"),
   (await import("./controllers/pages/my/reading-list/articles/show.js")).default
 );
 
