@@ -28,20 +28,6 @@
     return (end > 0) ? title.slice(0, end) : title;
   }
 
-  let prevFiltersChecked = {};
-
-  const updateCheckedFilters = (e) => {
-    prevFiltersChecked = {};
-    for (let el of $("#own-tag-filters-section")?.find('input[type="checkbox"]:checked')) {
-      prevFiltersChecked[$(el).attr('id')] = true;
-    }
-
-    if (Object.keys(prevFiltersChecked).length === 0) {
-      $("#index-search-filters-btn").removeClass("active-button");
-    } else {
-      $("#index-search-filters-btn").addClass("active-button");
-    }
-  }
 
   let id = window.location.pathname.split('/').at(-1);
 
@@ -49,27 +35,12 @@
     toggleLoadOverLay();
     id = extractNumberParamFromURL(window.location);
 
-
-
-
-    // try {
-    //   const resp = await axios({
-    //     method: 'GET',
-    //     url: `/api/my/reading-list/${id}`,
-    //   });
-    // } catch (err) {
-    //   console.error(err);
-    // } finally {
-    //   console.log('never happens?')
-    //   toggleLoadOverLay();
-    // }
-
     axios({
       method: 'GET',
       url: `/api/my/reading-list/articles/${id}`,
 
     }).then((resp) => {
-      console.log(resp.data.articles)
+      // console.log(resp.data.articles)
       generatePage({
         articles: resp.data.articles,
         meta: resp.data.meta,
@@ -81,7 +52,6 @@
       toggleLoadOverLay();
     });
   }
-
 
 
   const replaceEditTagModalContent = (article) => {
@@ -248,7 +218,7 @@
           </div>
           ` : ''}
         <div class="article-main-content">
-          ${(article?.content)? article.content : `<h3 class="text-center">This content is protected, please visit the original source directly or check out the related links below.</h3>`}
+          ${(article?.content)? article.content : `<h3 class="text-center" style="margin-top: 30px;">This content is protected, please visit the original source directly or check out the related links below.</h3>`}
         </div>
         <div class="article-related-links">
           <h4>Related Links:</h4>
@@ -300,27 +270,44 @@
     // `;
   }
 
+  const handleTagSearch = (e) => {
+    // console.log(e.target, e.currentTarget, $(e.currentTarget)?.val());
+    const code = e.keyCode;
 
-  const updateOwnSearchFilters = () => {
+    const tagName = $(e.currentTarget)?.val() || '';
+    const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
 
-    axios({
-      method: "POST",
-      url: "/api/my/reading-list/articles/tags",
-      data: {
-        tagName: '',
-        showMine: true,
-      }
-    }).then((resp) => {
-      const ownTags = {};
-      resp.data.tags.forEach((tag) => {
-        ownTags[tag.id] = tag.name;
+    console.log('handleTagSearch formData', formData)
+
+    if (code == 8 || code == 9 ||
+      code == 46 || code == 95 || code == 189 ||
+      (code > 47 && code < 58) ||
+      (code > 64 && code < 91) ||
+      (code > 96 && code < 123)) {
+      // console.log('formData', formData);
+      axios({
+        method: 'POST',
+        url: '/api/my/reading-list/articles/tags',
+        data: {
+          tagName,
+          currTags: {
+            ...formData
+          }
+        }
+      }).then((resp) => {
+        console.log(resp.data);
+        $("#tags-search-list").html(refreshTagsSearchResult(resp.data.tags));
+      }).catch(err => {
+        console.error(err);
+      }).finally(() => {
+
       });
-      $("#own-tag-filters-section").html(generateOwnSearchFilters(ownTags));
-    }).catch((err) => {
-      console.error(err);
-    }).finally(() => {
 
-    });
+    }
+
+    if (code == 13) {
+      $("#search-tag-add").trigger('click');
+    }
 
   }
 
@@ -328,8 +315,6 @@
     const $page = $("#pages-own-articles-show");
     refreshArticleActions(info);
     const $article = generateArticleContent(info);
-
-    // updateOwnSearchFilters(info);
 
     $page.html('').append($article);
   }
@@ -489,7 +474,8 @@
   }
 
   const showEditTagModal = (e) => {
-    console.log(e.currentTarget, e.$target);
+    // console.log(e.currentTarget, e.$target);
+    console.log('showEditTagModal', e.currentTarget, e.$target);
     e.preventDefault();
     toggleLoadOverLay();
     // console.log("handleBookmarkArticle called");
@@ -572,6 +558,19 @@
 
   $(document).ready(() => {
     getOwnArticle();
+
+    const $editTagsModal = $("#editTagsModal");
+    $editTagsModal.on('submit', "#tag-edit-form", handleTagEdit);
+    $editTagsModal.on('keyup', "#search-tags", handleTagSearch);
+    $editTagsModal.on('click', "#search-tag-add", handleAppendTagList);
+    $editTagsModal.on('click', 'span.btn-close.remove-tag-button', handleRemoveFromTagList);
+    $editTagsModal.on('hidden.bs.modal', redirectToSelf);
+
+    const $ownArticleActions = $("#own-article-actions");
+    $ownArticleActions.on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);
+    $ownArticleActions.on('click', 'div.card-actions button.btn-outline-danger[data-article-id]', handleRemoveBookmark);
+    $ownArticleActions.on('click', 'button.btn-info[data-own-article-id]', showEditTagModal);
+
   });
 </script>
 
@@ -581,6 +580,35 @@
   <div id="own-article-actions" class="d-flex my-2 justify-content-end">
     <!-- <button class="btn btn-secondary">Edit Tag</button>
     <button class="btn btn-secondary">Remove Bookmark</button> -->
+  </div>
+  <div class="modal fade" id="editTagsModal" tabindex="-1" aria-labelledby="editTagsModalLabel" aria-hidden="true">
+    <div class="modal-dialog text-dark">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="editTagsModalLabel">Edit Tags</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body modal-edit-tags-body">
+          <form id="tag-edit-form" class="visibility-hidden"></form>
+          <div id="current-article-tags" class="tags-list-in-modal">
+          </div>
+          <div class="d-flex">
+            <div class="col">
+              <label for="search-tags" class="form-label">Search tag:</label>
+              <input list="tags-search-list" id="search-tags" name="tagName" autocomplete="off" class="form-control" />
+              <datalist id="tags-search-list">
+                <!-- <option value="APPLE"></option> -->
+              </datalist>
+              <button id="search-tag-add" type="button" class="btn btn-primary my-2">Add tag</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button id="submit-tag-edit-btn" type="submit" form="tag-edit-form" class="btn btn-primary">Apply</button>
+        </div>
+      </div>
+    </div>
   </div>
   <div id="pages-own-articles-show"></div>
 </div>
