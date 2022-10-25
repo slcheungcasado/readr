@@ -95,7 +95,8 @@
       method: 'DELETE',
       url: '/api/auth/logout',
     }).then(() => {
-      window.location.href = '/auth/login'
+      $("ul.nav > li:first-child > a").attr('href', "test");
+      window.location.href = '/auth/login';
     });
 
   }
@@ -103,7 +104,6 @@
   $(document).ready(() => {
     getMyProfile();
     highlightActivePage();
-    // updateNavbar();
     $('#navbar-collapse').on('click', toggleNavBar);
     $('#navbar').on('click', '#auth-logout', handleLogout)
   });
@@ -116,7 +116,7 @@
   <hr>
   <ul class="nav nav-pills flex-column mb-auto">
     <li class="nav-item">
-      <a href="#" class="nav-link text-white">
+      <a href="/my/reading-list/articles/blank" class="nav-link text-white">
         <i class="fas fa-book"></i>
         <span>Read</span>
       </a>

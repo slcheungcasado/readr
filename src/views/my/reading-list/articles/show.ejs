@@ -17,6 +17,11 @@
     window.location.reload();
   }
 
+  const updateShownArticleUrl = (id) => {
+    const url = new URL(window.location);
+    window.location = url.origin + `/my/reading-list/articles/${id}`;
+  }
+
   const extractNumberParamFromURL = (url) => {
     const link = new URL(url);
     const pattern = /\/(?<id>\d+)/;
@@ -42,23 +47,27 @@
   const getOwnArticle = () => {
     toggleLoadOverLay();
     id = extractNumberParamFromURL(window.location);
-
-    axios({
-      method: 'GET',
-      url: `/api/my/reading-list/articles/${id}`,
-
-    }).then((resp) => {
-      // console.log(resp.data.articles)
-      generatePage({
-        articles: resp.data.articles,
-        meta: resp.data.meta,
-      });
-    }).catch((err) => {
-      console.error(err);
-    }).finally(() => {
-      // console.log('never happens?');
+    if (!id) {
+      generatePage({});
       toggleLoadOverLay();
-    });
+    } else {
+      axios({
+        method: 'GET',
+        url: `/api/my/reading-list/articles/${id}`,
+
+      }).then((resp) => {
+        // console.log(resp.data.articles)
+        generatePage({
+          articles: resp.data.articles,
+          meta: resp.data.meta,
+        });
+      }).catch((err) => {
+        console.error(err);
+      }).finally(() => {
+        // console.log('never happens?');
+        toggleLoadOverLay();
+      });
+    }
   }
 
 
@@ -111,16 +120,10 @@
     articles: readingListArticle = {},
     meta = {}
   }) => {
-    const article = readingListArticle?.article || {};
+    const article = readingListArticle?.article || null;
+    if (!article) return;
     // console.log('refreshArticleActions article', article);
     const html = `
-    <button
-      class="btn btn-danger mx-2"
-      data-own-article-id="${(article?.id)? article.id : null}"
-    >
-      <i class="fas fa-bookmark"></i>
-      <span>Remove Bookmark</span>
-    </button>
     <button
       class="btn btn-info mx-2"
       data-bs-toggle="modal"
@@ -129,7 +132,15 @@
     >
       <i class="fas fa-tag"></i>
       <span>Edit Tags</span>
-    </button>`
+    </button>
+    <button
+      class="btn btn-danger mx-2"
+      data-own-article-id="${(article?.id)? article.id : null}"
+    >
+      <i class="fas fa-bookmark"></i>
+      <span>Remove Bookmark</span>
+    </button>
+    `
     $("#own-article-actions").html(html);
     return;
   }
@@ -154,7 +165,16 @@
     // console.log('generateArticleContent meta', meta);
 
     const userTags = readingListArticle?.tags || [];
-    const article = readingListArticle?.article || {};
+    const article = readingListArticle?.article || null;
+
+    if (!article) {
+      return `
+      <div class="d-flex flex-column justify-content-center align-items-center" style="width:100%;height:100vh;">
+        <h3 class="text-center">No article found!</h3>
+        <a class="btn btn-secondary my-3" href="/articles">Search News</a>
+      </div>
+      `
+    }
 
     // console.log('userTags', userTags);
     // console.log('article', article);
@@ -426,10 +446,14 @@
       $button.removeClass('btn-success');
       $button.addClass('btn-danger');
       $button.find('span').text('Remove Bookmark');
+      $('button.btn-info[data-bs-target="#editTagsModal"]').show();
+      // console.log('toggleButtonType', $('button.btn-info[data-bs-target="#editTagsModal"]'))
     } else {
       $button.removeClass('btn-danger');
       $button.addClass('btn-success');
       $button.find('span').text('Bookmark');
+      $('button.btn-info[data-bs-target="#editTagsModal"]').hide();
+      // console.log('toggleButtonType', $('button.btn-info[data-bs-target="#editTagsModal"]'))
     }
   }
 
@@ -446,7 +470,8 @@
         articleId
       }
     }).then((resp) => {
-      toggleButtonType($button)
+      toggleButtonType($button);
+      updateShownArticleUrl(resp.data.article.id);
     }).catch((err) => {
       console.error(err);
       generatePage({
