@@ -19,7 +19,8 @@
 
   const updateShownArticleUrl = (id) => {
     const url = new URL(window.location);
-    window.location = url.origin + `/my/reading-list/articles/${id}`;
+    const newPath = `/my/reading-list/articles/${id}`;
+    window.location = url.origin + newPath;
   }
 
   const extractNumberParamFromURL = (url) => {
@@ -31,7 +32,7 @@
 
   const extractFilenameFromURL = (url) => {
     const link = new URL(url);
-    const pattern = /\/(?<filename>\w*\.\w+)/;
+    const pattern = /(?<filename>[^/]*.(jpg|jpeg|png|gif|bmp|svg|webp))/;
     const matches = link.pathname.match(pattern);
     return matches?.groups?.filename || '';
   }
@@ -470,8 +471,8 @@
         articleId
       }
     }).then((resp) => {
-      toggleButtonType($button);
       updateShownArticleUrl(resp.data.article.id);
+      toggleButtonType($button);
     }).catch((err) => {
       console.error(err);
       generatePage({
@@ -596,6 +597,7 @@
 
   $(document).ready(() => {
     getOwnArticle();
+    // $('ul.nav > li.nav-item:first-child > a').attr('href', window.location.pathname || '/my/reading-list/articles/blank');
 
     const $editTagsModal = $("#editTagsModal");
     $editTagsModal.on('submit', "#tag-edit-form", handleTagEdit);

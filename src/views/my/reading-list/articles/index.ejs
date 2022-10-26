@@ -354,7 +354,23 @@
         articleId
       }
     }).then((resp) => {
-      toggleButtonType($button)
+      const id = resp.data?.article?.id;
+      if (id) {
+        const $editBtn = $button.siblings('button');
+        const $readLink = $button.siblings('a');
+
+        $editBtn.attr('data-own-article-id', id);
+        let href = $readLink.attr('href').split('/');
+        href.pop();
+        href.push(id);
+        $readLink.attr('href', href.join('/'));
+
+        $editBtn.show();
+        $readLink.show();
+        toggleButtonType($button);
+      } else {
+        redirectToSelf();
+      }
     }).catch((err) => {
       console.error(err);
       generatePage({
@@ -381,11 +397,18 @@
         articleId
       }
     }).then((resp) => {
-      // generatePage({
-      // articles: resp.data.articles,
-      // meta: resp.data.meta
-      // });
-      toggleButtonType($button);
+      const id = resp.data?.article?.id;
+      if (id) {
+        const $editBtn = $button.siblings('button');
+        const $readLink = $button.siblings('a');
+
+        $editBtn.hide();
+        $readLink.hide();
+
+        toggleButtonType($button);
+      } else {
+        redirectToSelf();
+      }
     }).catch((err) => {
       console.error(err);
       generatePage({
@@ -548,7 +571,6 @@
 
   $(document).ready(() => {
     getOwnArticles();
-
     $("#filtersModal").on('hidden.bs.modal', updateCheckedFilters)
     $("#own-articles-search-section").on('submit', "#index-search-form", handleSearch);
 

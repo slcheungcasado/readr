@@ -95,17 +95,23 @@
       method: 'DELETE',
       url: '/api/auth/logout',
     }).then(() => {
-      $("ul.nav > li:first-child > a").attr('href', "test");
+      $("ul.nav > li:first-child > a").attr('href', "/my/reading-list/articles/blank");
       window.location.href = '/auth/login';
     });
 
   }
 
+
   $(document).ready(() => {
     getMyProfile();
     highlightActivePage();
     $('#navbar-collapse').on('click', toggleNavBar);
-    $('#navbar').on('click', '#auth-logout', handleLogout)
+    $('#navbar').on('click', '#auth-logout', handleLogout);
+
+    if (window.location.pathname.includes('/my/reading-list/articles/')) {
+      $('#navbar-collapse').trigger('click');
+    }
+
   });
 </script>
 
@@ -115,12 +121,6 @@
   </a>
   <hr>
   <ul class="nav nav-pills flex-column mb-auto">
-    <li class="nav-item">
-      <a href="/my/reading-list/articles/blank" class="nav-link text-white">
-        <i class="fas fa-book"></i>
-        <span>Read</span>
-      </a>
-    </li>
     <li class="nav-item">
       <a href="/my/reading-list" class="nav-link text-white">
         <i class="fas fa-list"></i>
