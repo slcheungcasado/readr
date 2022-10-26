@@ -615,9 +615,6 @@
   }
 
   const handleTagClick = (e) => {
-    console.log('handleTagClick', e.currentTarget, e.target);
-    console.log($(e.currentTarget).text(), $(e.target).text());
-
     window.location.replace(`/my/reading-list?tagFilter=${$(e.currentTarget).text()}`);
   }
 

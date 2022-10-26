@@ -12,8 +12,6 @@
   }
 
   const setTagFilter = (tagFilterName, trueOrFalse = false) => {
-    console.log('setTagFilter', $("#own-tag-filters-section").find(`input[name="user-tag-${tagFilterName}"]`));
-    console.log(`input[name="user-tag-${tagFilterName}"]`);
     $("#own-tag-filters-section").find(`input[name="user-tag-${tagFilterName}"]`).prop('checked', trueOrFalse);
     updateCheckedFilters();
   }
@@ -233,7 +231,6 @@
       resp.data.tags.forEach((tag) => {
         ownTags[tag.id] = tag.name;
       });
-      console.log('own tags', ownTags);
       $("#own-tag-filters-section").html(generateOwnSearchFilters(ownTags));
     }).catch((err) => {
       console.error(err);
@@ -456,11 +453,8 @@
   }
 
   const showEditTagModal = (e) => {
-    console.log(e.currentTarget, e.$target);
     e.preventDefault();
     toggleLoadOverLay();
-    // console.log("handleBookmarkArticle called");
-    // console.log(e.currentTarget, e.$target);
     const $button = $(e.currentTarget)
     $button?.prop("disabled", true);
     const articleId = $button.data('own-article-id');
@@ -487,7 +481,6 @@
 
   const toggleApplyButton = ($button) => {
     if ($button.prop('disabled')) {
-      console.log('showing success message');
       showSuccessMessage('Tag Edited Successfully');
       $button.html('Apply')
       $button.removeClass('btn-success');
@@ -539,12 +532,12 @@
     $label?.remove();
     $input?.remove();
 
-    console.log('label', $label);
-    console.log('input', $input);
+    // console.log('label', $label);
+    // console.log('input', $input);
   }
 
   const handleAppendTagList = (e) => {
-    console.log('e.currentTarget', e.currentTarget, e.target);
+    // console.log('e.currentTarget', e.currentTarget, e.target);
     const tagName = $("#search-tags")?.val() || '';
     const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
     const tagAsUpper = tagName.toUpperCase();
@@ -576,7 +569,8 @@
       $("#search-tags").val('');
       $("#tags-search-list").html('');
     } else {
-      console.log('tagName', tagName, 'CANT be added');
+      // console.log('tagName', tagName, 'CANT be added');
+      //#TODO: Generalise user prompt feedback and use it to prompt this message instead
     }
   }
 
@@ -591,7 +585,7 @@
     const tagName = $(e.currentTarget)?.val() || '';
     const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
 
-    console.log('handleTagSearch formData', formData)
+    // console.log('handleTagSearch formData', formData)
 
     if (code == 8 || code == 9 ||
       code == 46 || code == 95 || code == 189 ||
@@ -609,7 +603,7 @@
           }
         }
       }).then((resp) => {
-        console.log(resp.data);
+        // console.log(resp.data);
         $("#tags-search-list").html(refreshTagsSearchResult(resp.data.tags));
       }).catch(err => {
         console.error(err);
@@ -640,12 +634,7 @@
   const applyUrlFilters = () => {
     const params = new URLSearchParams(window.location.search);
     const params2 = new URL(window.location.href);
-    console.log('before', window.location.search);
-    console.log('applyUrlFilters', params);
-    console.log('applyUrlFilters 2', params.searchParams);
-    console.log(`params.get('tagFilter')`, params.get('tagFilter'));
     if (params.has('tagFilter')) {
-      console.log('happens');
       handleSearch(null, {
         fromTag: true,
         tag: params.get('tagFilter')
