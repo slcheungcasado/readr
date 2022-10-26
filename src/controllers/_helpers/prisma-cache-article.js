@@ -26,24 +26,42 @@ async function runArticleParser(dataToSave, { needHTML = false } = {}) {
   // }
 
   try {
-    //method 1
+    //method 1 (broken)
     // const controller = new AbortController();
-    // const timeoutID = setTimeout(() => controller.abort(), 5000);
-    // const data = await extract(
+    // const timeoutID = setTimeout(() => controller.abort(), 10 * 1000);
+    // extract(
     //   dataToSave.url,
     //   { wordsPerMinute: 250 },
     //   { signal: controller.signal }
-    // );
-    // clearTimeout(timeoutID);
+    // )
+    //   .then((data) => {
+    //     clearTimeout(timeoutID);
+    //     if (!data || data === "timedOut") return dataToSave;
+    //     dataToSave.description = data?.description || "";
+    //     dataToSave.image = data?.image || "";
+    //     if (needHTML) dataToSave.content = data?.content || null;
+    //     dataToSave.author = data?.author || "";
+    //     if (!dataToSave?.sourceName && !dataToSave?.sourceURL) {
+    //       dataToSave.sourceName = data?.source;
+    //     }
+    //     dataToSave.readingTime = data?.ttr || 0;
+    //   })
+    //   .catch((err) => {
+    //     console.log(err);
+    //     return dataToSave;
+    //   })
+    //   .finally(() => {
+    //     return dataToSave;
+    //   });
 
-    //method2
+    //method 2 (works)
     const data = extract(dataToSave.url, { wordsPerMinute: 250 });
 
     let timeOutID = null;
     const timeout = new Promise((resolve, reject) => {
       timeOutID = setTimeout(() => {
         resolve("timedOut");
-      }, 10000);
+      }, Number(process.env["REQUEST_TIMEOUT_SECONDS"]) * 1000);
     });
 
     return Promise.race([data, timeout])
@@ -75,9 +93,6 @@ async function runArticleParser(dataToSave, { needHTML = false } = {}) {
 export async function cacheArticle(article) {
   if (!article?.link) {
     return null;
-  }
-  if (article?.tags) {
-    console.log("cacheArticle, tags", JSON.stringify(article.tags));
   }
 
   // Expected after neo-gnews API Call
@@ -111,7 +126,6 @@ export async function cacheArticle(article) {
   //   tags: [],
   //   readingTime: "",
   // };
-  console.log("dataToSave.tags", dataToSave.tags);
 
   // Do prisma article create query
   try {

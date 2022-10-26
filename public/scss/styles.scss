@@ -227,6 +227,7 @@ body {
 }
 
 .user-action-feedback-log {
+  z-index: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-around;

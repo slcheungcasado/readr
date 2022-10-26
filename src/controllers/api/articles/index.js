@@ -61,17 +61,7 @@ export default async function (req, res) {
       });
 
       try {
-        articles = await Promise.all(promises);
-
-        matchedRecords = articles.length;
-
-        const articlesByDate = sortByField(articles, "pubDate", 'desc');
-        articles = q ? sortByRelevance(articlesByDate,
-                                      ["title", "description", "sourceName"],
-                                      q,
-                                      "desc")
-                      : articlesByDate;
-
+        await Promise.all(promises);
       } catch (err) {
         console.error('Promise all failed or including tags failed', err);
       }
@@ -87,71 +77,74 @@ export default async function (req, res) {
       } catch (err) {
         console.error('Failed to create cacheLog')
       }
-    } else {
-      const whereQuery = q
-        ? {
-            OR: [
-              {
-                title: { contains: q, mode: "insensitive" },
-              },
-              {
-                sourceName: { contains: q, mode: "insensitive" },
-              },
-              {
-                description: { contains: q, mode: "insensitive" },
-              },
-            ],
-          }
-        : {
-            tags: {
-              some: {
-                name: {
-                  equals: Topic.HEADLINE,
-                },
+    }
+
+    const whereQuery = q
+      ? {
+          OR: [
+            {
+              title: { contains: q, mode: "insensitive" },
+            },
+            {
+              sourceName: { contains: q, mode: "insensitive" },
+            },
+            {
+              description: { contains: q, mode: "insensitive" },
+            },
+          ],
+        }
+      : {
+          tags: {
+            some: {
+              name: {
+                equals: Topic.HEADLINE,
               },
             },
-          };
-      const relevanceQuery = q
-        ? {
+          },
+        };
+    const orderBy = q
+      ? [
+          { pubDate: "desc" },
+          {
             _relevance: {
               fields: ["title", "description", "sourceName"],
               search: q,
               sort: "desc",
             },
-          }
-        : {};
-      const prismaQuery = {
-        where: {
-          ...whereQuery,
-          readingListArticle: {
-            none: {
-              readingList: {
-                userId,
-              },
+          },
+        ]
+      : { pubDate: "desc" };
+    const prismaQuery = {
+      where: {
+        ...whereQuery,
+        readingListArticle: {
+          none: {
+            readingList: {
+              userId,
             },
           },
         },
-        include: {
-          tags: true,
-        },
-        skip,
-        take,
-        orderBy: [{ pubDate: "desc" }, relevanceQuery],
-      };
-      articles = await prisma.article.findMany(prismaQuery);
-      matchedRecords = await prisma.article.count({
-        where: {
-          ...whereQuery,
-          readingListArticle: {
-            none: {
-              readingList: {
-                userId,
-              },
+      },
+      include: {
+        tags: true,
+      },
+      skip,
+      take,
+      orderBy,
+    };
+    articles = await prisma.article.findMany(prismaQuery);
+    matchedRecords = await prisma.article.count({
+      where: {
+        ...whereQuery,
+        readingListArticle: {
+          none: {
+            readingList: {
+              userId,
             },
           },
         },
-      });
-    }
+      },
+    });
 
     // console.log(`Found ${articles.length} articles`);
     return res.status(200).json({
