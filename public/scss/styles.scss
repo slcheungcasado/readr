@@ -182,3 +182,46 @@ body {
 .remove-tag-button {
   margin-right: 5px;
 }
+
+.user-action-feedback-log {
+  position: fixed;
+  padding: 10px;
+  height: 5rem;
+  width: 30%;
+  background-color: #45b74f;
+  color: #fefefe;
+  opacity: 0;
+  z-index: 1056;
+  display: flex;
+  bottom: 0%;
+  right: 0%;
+  border-radius: 5px;
+  justify-content: center;
+  align-items: center;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.fadeIn {
+  animation: fadeIn 2s;
+}
+
+.fadeOut {
+  animation: fadeOut 2s;
+}

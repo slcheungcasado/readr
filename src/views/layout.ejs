@@ -32,6 +32,17 @@
       $(".loading-overlay").toggleClass('visually-hidden');
     }
 
+    const showSuccessMessage = (msg) => {
+      $(".user-action-feedback-log").text(msg);
+      $(".user-action-feedback-log").removeClass('fadeIn');
+      $(".user-action-feedback-log").addClass('fadeIn');
+      setTimeout(function() {
+        $(".user-action-feedback-log").removeClass('fadeIn');
+        $(".user-action-feedback-log").addClass('fadeOut');
+      }, 2000)
+      // $(".user-action-feedback-log").show();
+    }
+
     $(document).ready(() => {
       // $('form').on('submit', toggleLoadOverLay);
     })
@@ -69,6 +80,7 @@
         </div>
       </div>
     </div>
+    <div class="user-action-feedback-log">Foo</div>
     <%- include('./_partials/_navbar.ejs') %>
     <%- body %>
   </section>

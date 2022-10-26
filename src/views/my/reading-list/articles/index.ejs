@@ -485,14 +485,35 @@
     });
   }
 
+  const toggleApplyButton = ($button) => {
+    if ($button.prop('disabled')) {
+      console.log('showing success message');
+      showSuccessMessage('Tag Edited Successfully');
+      $button.html('Apply')
+      $button.removeClass('btn-success');
+      $button.addClass('btn-primary');
+      $button.prop('disabled', false);
+
+    } else {
+      $button.prop('disabled', true);
+      $button.removeClass('btn-primary');
+      $button.addClass('btn-success');
+      $button.html(`<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Loading...`);
+    }
+  }
+
+
+
   const handleTagEdit = (e) => {
     e.preventDefault();
     const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
     // console.log("Tag Edit Details submitted");
     // console.log('formData', formData);
     // console.log('ownArticleId', $("#submit-tag-edit-btn").data('ownArticleId'));
-    const ownArticleId = $("#submit-tag-edit-btn").data('ownArticleId')
-
+    const $submitButton = $("#submit-tag-edit-btn");
+    const ownArticleId = $submitButton.data('ownArticleId');
+    toggleApplyButton($submitButton);
+    $submitButton.prop('disabled', true);
     axios({
       method: 'PUT',
       url: '/api/my/reading-list/articles/tags',
@@ -501,11 +522,11 @@
         currTags: formData,
       }
     }).then((resp) => {
-      console.log(resp.data)
+      // console.log(resp.data)
     }).catch((err) => {
       console.error(err)
     }).finally(() => {
-
+      toggleApplyButton($submitButton);
     });
   }
 
