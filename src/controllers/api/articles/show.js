@@ -101,7 +101,18 @@ export default async function (req, res) {
         },
       };
       articles = await prisma.article.findMany(prismaQuery);
-      matchedRecords = await prisma.article.count({ where: { ...whereQuery } });
+      matchedRecords = await prisma.article.count({
+        where: {
+          ...whereQuery,
+          readingListArticle: {
+            none: {
+              readingList: {
+                userId,
+              },
+            },
+          },
+        },
+      });
     }
 
     return res.status(200).json({
