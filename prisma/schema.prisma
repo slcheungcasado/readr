@@ -8,6 +8,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Topic {
+  HEADLINE
+  WORLD
+  NATION
+  BUSINESS
+  TECHNOLOGY
+  ENTERTAINMENT
+  SPORTS
+  SCIENCE
+  HEALTH
+}
+
+model CacheLog {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  topic     Topic    @default(HEADLINE)
+  query     String?
+}
+
 model User {
   id           Int          @id @default(autoincrement())
   username     String       @default(uuid())

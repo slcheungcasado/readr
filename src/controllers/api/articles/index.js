@@ -5,6 +5,8 @@ import * as neoGnews from "../../_helpers/neo-gnews.js";
 import { cacheIfNeeded } from "../../_helpers/prisma-is-cached.js";
 
 import prisma from "../../_helpers/prisma.js";
+import { Topic } from "@prisma/client";
+import { sortByField, sortByRelevance } from "../../_helpers/sort-utils.js";
 
 export default async function (req, res) {
   try {
@@ -20,16 +22,35 @@ export default async function (req, res) {
 
     let matchedRecords = 0;
     let articles = [];
-    let topic = "HEADLINE";
 
-    // If you want to cache new articles
-    if (doCache) {
+    // Get current time
+    const time = new Date();
+    let mostRecentLog = null;
+
+    // Get most recent log date to cache results if required
+    try {
+      mostRecentLog = await prisma.cacheLog.findFirstOrThrow({
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+    } catch (err) {
+      console.log(
+        "Prisma found no cacheLog, making caching request",
+        new Error(err)
+      );
+      doCache = true;
+    }
+
+    // prettier-ignore
+    if (doCache || (time - new Date(mostRecentLog?.createdAt) >= Number(process.env["TIME_TILL_CACHE_SECONDS"]) * 1000)) {
+      console.log('cache requested');
       const headlines = await neoGnews.headlines({ n: 100 });
       const promises = headlines.map((article) => {
         const url = new URL(article.link);
         article.link = url.origin + url.pathname;
         article.tags = {
-          connectOrCreate: [topic].map((tag) => {
+          connectOrCreate: [Topic.HEADLINE].map((tag) => {
             return {
               where: { name: tag },
               create: { name: tag },
@@ -39,8 +60,33 @@ export default async function (req, res) {
         return cacheIfNeeded(article);
       });
 
-      articles = await Promise.all(promises);
-      matchedRecords = articles.length;
+      try {
+        articles = await Promise.all(promises);
+
+        matchedRecords = articles.length;
+
+        const articlesByDate = sortByField(articles, "pubDate", 'desc');
+        articles = q ? sortByRelevance(articlesByDate,
+                                      ["title", "description", "sourceName"],
+                                      q,
+                                      "desc")
+                      : articlesByDate;
+
+      } catch (err) {
+        console.error('Promise all failed or including tags failed', err);
+      }
+
+
+      try {
+        await prisma.cacheLog.create({
+          data: {
+          topic: Topic.HEADLINE,
+          query: q,
+        },
+      });
+      } catch (err) {
+        console.error('Failed to create cacheLog')
+      }
     } else {
       const whereQuery = q
         ? {
@@ -60,11 +106,20 @@ export default async function (req, res) {
             tags: {
               some: {
                 name: {
-                  equals: topic,
+                  equals: Topic.HEADLINE,
                 },
               },
             },
           };
+      const relevanceQuery = q
+        ? {
+            _relevance: {
+              fields: ["title", "description", "sourceName"],
+              search: q,
+              sort: "desc",
+            },
+          }
+        : {};
       const prismaQuery = {
         where: {
           ...whereQuery,
@@ -81,9 +136,7 @@ export default async function (req, res) {
         },
         skip,
         take,
-        orderBy: {
-          pubDate: "desc",
-        },
+        orderBy: [{ pubDate: "desc" }, relevanceQuery],
       };
       articles = await prisma.article.findMany(prismaQuery);
       matchedRecords = await prisma.article.count({

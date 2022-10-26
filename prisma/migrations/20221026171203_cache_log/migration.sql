@@ -1,0 +1,12 @@
+-- CreateEnum
+CREATE TYPE "Topic" AS ENUM ('HEADLINE', 'WORLD', 'NATION', 'BUSINESS', 'TECHNOLOGY', 'ENTERTAINMENT', 'SPORTS', 'SCIENCE', 'HEALTH');
+
+-- CreateTable
+CREATE TABLE "CacheLog" (
+    "id" SERIAL NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "topic" "Topic" NOT NULL DEFAULT 'HEADLINE',
+    "query" TEXT,
+
+    CONSTRAINT "CacheLog_pkey" PRIMARY KEY ("id")
+);

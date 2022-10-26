@@ -4,17 +4,18 @@ import prisma from "../../_helpers/prisma.js";
 import * as neoGnews from "../../_helpers/neo-gnews.js";
 import { cacheIfNeeded } from "../../_helpers/prisma-is-cached.js";
 import _ from "lodash";
+import { Topic } from "@prisma/client";
 
-const TOPICS = [
-  "WORLD",
-  "NATION",
-  "BUSINESS",
-  "TECHNOLOGY",
-  "ENTERTAINMENT",
-  "SPORTS",
-  "SCIENCE",
-  "HEALTH",
-];
+// const TOPICS = [
+//   "WORLD",
+//   "NATION",
+//   "BUSINESS",
+//   "TECHNOLOGY",
+//   "ENTERTAINMENT",
+//   "SPORTS",
+//   "SCIENCE",
+//   "HEALTH",
+// ];
 
 export default async function (req, res) {
   try {
@@ -26,7 +27,7 @@ export default async function (req, res) {
       return handleErrors(res, new Error("Invalid topic"));
     } else {
       topic = topic.toUpperCase();
-      if (!TOPICS.includes(topic)) {
+      if (!Object.keys(Topic).includes(topic)) {
         return handleErrors(
           res,
           new Error("The provided article topic filter is not supported")
@@ -45,8 +46,31 @@ export default async function (req, res) {
     let articles = [];
     let matchedRecords = 0;
 
+    // Get current time
+    const time = new Date();
+    let mostRecentLog = null;
+
+    // Get most recent log date to cache results if required
+    try {
+      mostRecentLog = await prisma.cacheLog.findFirstOrThrow({
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+    } catch (err) {
+      console.log(
+        "Prisma found no cacheLog, making caching request",
+        new Error(err)
+      );
+      doCache = true;
+    }
+
     // If you want to cache new articles
-    if (doCache) {
+    if (
+      doCache ||
+      time - new Date(mostRecentLog?.createdAt) >=
+        Number(process.env["TIME_TILL_CACHE_SECONDS"]) * 1000
+    ) {
       // const startTime = new Date();
       const headlines = await neoGnews.topic(topic, { n: 100 });
 

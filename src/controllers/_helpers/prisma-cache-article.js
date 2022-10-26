@@ -15,7 +15,7 @@ const fieldsToOmit = [
 ];
 
 async function runArticleParser(dataToSave, { needHTML = false } = {}) {
-  // From article-parser
+  // Expected from article-parser
   // {
   //   descriptionBetter: data.description,
   //   image: data.image,
@@ -26,6 +26,7 @@ async function runArticleParser(dataToSave, { needHTML = false } = {}) {
   // }
 
   try {
+    //method 1
     // const controller = new AbortController();
     // const timeoutID = setTimeout(() => controller.abort(), 5000);
     // const data = await extract(
@@ -34,6 +35,9 @@ async function runArticleParser(dataToSave, { needHTML = false } = {}) {
     //   { signal: controller.signal }
     // );
     // clearTimeout(timeoutID);
+
+    //method2
+    const data = extract(dataToSave.url, { wordsPerMinute: 250 });
 
     let timeOutID = null;
     const timeout = new Promise((resolve, reject) => {
@@ -72,8 +76,11 @@ export async function cacheArticle(article) {
   if (!article?.link) {
     return null;
   }
+  if (article?.tags) {
+    console.log("cacheArticle, tags", JSON.stringify(article.tags));
+  }
 
-  // After neo-gnews API Call
+  // Expected after neo-gnews API Call
   let dataToSave = {
     title: article?.title,
     url: article?.link,
@@ -104,6 +111,7 @@ export async function cacheArticle(article) {
   //   tags: [],
   //   readingTime: "",
   // };
+  console.log("dataToSave.tags", dataToSave.tags);
 
   // Do prisma article create query
   try {
@@ -111,10 +119,11 @@ export async function cacheArticle(article) {
       data: dataToSave,
       include: { tags: true },
     });
+
     return articleObj;
   } catch (err) {
-    // throw err;
-    // console.log("Failed to write article, trying filteredData...", err);
+    console.log(err);
+    console.log("Failed to write article, trying filteredData...");
     const filteredData = _.omit(dataToSave, fieldsToOmit);
     try {
       const filteredObj = await prisma.article.create({

@@ -30,7 +30,7 @@ app.use(
     sourceMap: true,
     sourceComments: true,
     watchFiles: true,
-    logToConsole: true,
+    logToConsole: false,
   })
 );
 

@@ -3,9 +3,11 @@ import { cacheArticle } from "./prisma-cache-article.js";
 
 export async function cacheIfNeeded(article) {
   try {
-    const foundArticle = await prisma.article.findUnique({
+    const foundArticle = await prisma.article.findUniqueOrThrow({
       where: { url: article.link },
-      rejectOnNotFound: true,
+      include: {
+        tags: true,
+      },
     });
     // console.log("Cache Hit");
     return foundArticle;
