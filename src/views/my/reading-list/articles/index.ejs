@@ -378,7 +378,7 @@
     e.preventDefault();
     toggleLoadOverLay();
     const $button = $(e.currentTarget)
-    const articleId = $button.data('article-id');
+    const articleId = $button.data('articleId');
 
     axios({
       method: 'POST',
@@ -398,9 +398,13 @@
         href.push(id);
         $readLink.attr('href', href.join('/'));
 
+        toggleButtonType($button);
+        showMessage({
+          msg: 'Article added to your reading list',
+          type: 'success'
+        });
         $editBtn.show();
         $readLink.show();
-        toggleButtonType($button);
       } else {
         redirectToSelf();
       }
@@ -418,10 +422,9 @@
   const handleRemoveBookmark = (e) => {
     e.preventDefault();
     toggleLoadOverLay();
-    // console.log("handleRemoveBookmark called");
-    // console.log(e.currentTarget, e.$target);
+
     const $button = $(e.currentTarget)
-    const articleId = $button.data('article-id');
+    const articleId = $button.data('articleId');
 
     axios({
       method: 'DELETE',
@@ -437,7 +440,10 @@
 
         $editBtn.hide();
         $readLink.hide();
-
+        showMessage({
+          msg: 'Article removed from your reading list',
+          type: 'warning'
+        });
         toggleButtonType($button);
       } else {
         redirectToSelf();
@@ -457,7 +463,7 @@
     toggleLoadOverLay();
     const $button = $(e.currentTarget)
     $button?.prop("disabled", true);
-    const articleId = $button.data('own-article-id');
+    const articleId = $button.data('ownArticleId');
     axios({
       method: 'GET',
       url: `/api/my/reading-list/articles/${articleId}`,
@@ -481,12 +487,10 @@
 
   const toggleApplyButton = ($button) => {
     if ($button.prop('disabled')) {
-      showSuccessMessage('Tag Edited Successfully');
       $button.html('Apply')
       $button.removeClass('btn-success');
       $button.addClass('btn-primary');
       $button.prop('disabled', false);
-
     } else {
       $button.prop('disabled', true);
       $button.removeClass('btn-primary');
@@ -506,7 +510,6 @@
     const $submitButton = $("#submit-tag-edit-btn");
     const ownArticleId = $submitButton.data('ownArticleId');
     toggleApplyButton($submitButton);
-    $submitButton.prop('disabled', true);
     axios({
       method: 'PUT',
       url: '/api/my/reading-list/articles/tags',
@@ -516,6 +519,10 @@
       }
     }).then((resp) => {
       // console.log(resp.data)
+      showMessage({
+        msg: 'Tag Edited Successfully',
+        type: 'success'
+      });
     }).catch((err) => {
       console.error(err)
     }).finally(() => {
@@ -537,41 +544,31 @@
   }
 
   const handleAppendTagList = (e) => {
-    // console.log('e.currentTarget', e.currentTarget, e.target);
     const tagName = $("#search-tags")?.val() || '';
     const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
     const tagAsUpper = tagName.toUpperCase();
-    if (tagName && Object.values(formData).every(v => v.toUpperCase() !== tagAsUpper)) {
-      const match = $("#tags-search-list").find(`option[value="${tagAsUpper}"]`);
-      // console.log('match', match)
-      // console.log('match.data("isUserTag")', match.data("isUserTag"));
-      $("#current-article-tags").append(makeTag({
-        name: tagAsUpper,
-        id: match.data('tagId') || null,
-      }));
-
-      // if (match.data('isUserTag') === false) {
-      //   $("#current-article-tags").append(makeDefaultTag({
-      //     name: tagAsUpper,
-      //     isDeletable: false,
-      //     id: match.data('tagId') || null,
-      //     isRemovable: true,
-      //   }));
-      // } else {
-      //   $("#current-article-tags").append(makeTag({
-      //     name: tagAsUpper,
-      //     isDeletable: true,
-      //     id: match.data('tagId') || null,
-      //     isRemovable: true,
-      //   }));
-      // }
-
-      $("#search-tags").val('');
-      $("#tags-search-list").html('');
-    } else {
-      // console.log('tagName', tagName, 'CANT be added');
-      //#TODO: Generalise user prompt feedback and use it to prompt this message instead
+    if (!tagName) {
+      showMessage({
+        msg: 'Tag name CANNOT be empty',
+        type: 'danger'
+      });
+      return;
+    } else if (!Object.values(formData).every(v => v.toUpperCase() !== tagAsUpper)) {
+      showMessage({
+        msg: 'Article already has this tag',
+        type: 'info'
+      });
+      return;
     }
+
+    const match = $("#tags-search-list").find(`option[value="${tagAsUpper}"]`);
+    $("#current-article-tags").append(makeTag({
+      name: tagAsUpper,
+      id: match.data('tagId') || null,
+    }));
+
+    $("#search-tags").val('');
+    $("#tags-search-list").html('');
   }
 
   const redirectToSelf = (e) => {

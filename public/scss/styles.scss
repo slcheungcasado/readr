@@ -225,3 +225,9 @@ body {
 .fadeOut {
   animation: fadeOut 2s;
 }
+
+.user-action-feedback-log {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}

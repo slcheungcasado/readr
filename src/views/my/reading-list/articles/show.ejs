@@ -20,7 +20,8 @@
   const updateShownArticleUrl = (id) => {
     const url = new URL(window.location);
     const newPath = `/my/reading-list/articles/${id}`;
-    window.location = url.origin + newPath;
+    // window.location = url.origin + newPath; // redirects after url change
+    window.history.pushState({}, null, url.origin + newPath); // change url without redirect
   }
 
   const extractNumberParamFromURL = (url) => {
@@ -136,7 +137,7 @@
     </button>
     <button
       class="btn btn-danger mx-2"
-      data-own-article-id="${(article?.id)? article.id : null}"
+      data-article-id="${(article?.id)? article.id : null}"
     >
       <i class="fas fa-bookmark"></i>
       <span>Remove Bookmark</span>
@@ -448,13 +449,11 @@
       $button.addClass('btn-danger');
       $button.find('span').text('Remove Bookmark');
       $('button.btn-info[data-bs-target="#editTagsModal"]').show();
-      // console.log('toggleButtonType', $('button.btn-info[data-bs-target="#editTagsModal"]'))
     } else {
       $button.removeClass('btn-danger');
       $button.addClass('btn-success');
       $button.find('span').text('Bookmark');
       $('button.btn-info[data-bs-target="#editTagsModal"]').hide();
-      // console.log('toggleButtonType', $('button.btn-info[data-bs-target="#editTagsModal"]'))
     }
   }
 
@@ -462,7 +461,7 @@
     e.preventDefault();
     toggleLoadOverLay();
     const $button = $(e.currentTarget)
-    const articleId = $button.data('own-article-id');
+    const articleId = $button.data('articleId');
 
     axios({
       method: 'POST',
@@ -472,7 +471,12 @@
       }
     }).then((resp) => {
       updateShownArticleUrl(resp.data.article.id);
+      updateEditModalId(resp.data.article.id);
       toggleButtonType($button);
+      showMessage({
+        msg: 'Article added to your reading list',
+        type: 'success'
+      });
     }).catch((err) => {
       console.error(err);
       generatePage({
@@ -488,7 +492,7 @@
     e.preventDefault();
     toggleLoadOverLay();
     const $button = $(e.currentTarget)
-    const articleId = $button.data('own-article-id');
+    const articleId = $button.data('articleId');
 
     axios({
       method: 'DELETE',
@@ -497,10 +501,10 @@
         articleId
       }
     }).then((resp) => {
-      // generatePage({
-      // articles: resp.data.articles,
-      // meta: resp.data.meta
-      // });
+      showMessage({
+        msg: 'Article removed from your reading list',
+        type: 'warning'
+      });
       toggleButtonType($button);
     }).catch((err) => {
       console.error(err);
@@ -521,16 +525,16 @@
     // console.log(e.currentTarget, e.$target);
     const $button = $(e.currentTarget)
     $button?.prop("disabled", true);
-    const articleId = $button.data('own-article-id');
+    const articleId = $button.data('ownArticleId');
     axios({
       method: 'GET',
       url: `/api/my/reading-list/articles/${articleId}`,
       params: {
-        // id: articleId,
+        id: articleId,
         tagsOnly: true,
       }
     }).then((resp) => {
-      replaceEditTagModalContent(resp.data.articles)
+      replaceEditTagModalContent(resp.data.articles);
       // console.log(resp?.data);
     }).catch((err) => {
       console.error(err);
@@ -545,8 +549,7 @@
 
   const toggleApplyButton = ($button) => {
     if ($button.prop('disabled')) {
-      showSuccessMessage('Tag Edited Successfully');
-      $button.html('Apply')
+      $button.html('Apply');
       $button.removeClass('btn-success');
       $button.addClass('btn-primary');
       $button.prop('disabled', false);
@@ -558,6 +561,12 @@
     }
   }
 
+  const updateEditModalId = (id) => {
+    console.log('updating article id', $('button.btn-info[data-bs-target="#editTagsModal"]').data('ownArticleId'), id);
+    console.log($('button.btn-info[data-bs-target="#editTagsModal"]'));
+    $('button.btn-info[data-bs-target="#editTagsModal"]').data('ownArticleId', id);
+  }
+
   const handleTagEdit = (e) => {
     e.preventDefault();
     const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
@@ -565,7 +574,6 @@
     const ownArticleId = $submitButton.data('ownArticleId');
 
     toggleApplyButton($submitButton);
-    $submitButton.prop('disabled', true);
 
     axios({
       method: 'PUT',
@@ -575,7 +583,10 @@
         currTags: formData,
       }
     }).then((resp) => {
-      // console.log(resp.data)
+      showMessage({
+        msg: 'Tag Edited Successfully',
+        type: 'success'
+      });
     }).catch((err) => {
       console.error(err)
     }).finally(() => {
@@ -591,27 +602,35 @@
 
     $label?.remove();
     $input?.remove();
-
-    // console.log('label', $label);
-    // console.log('input', $input);
   }
 
   const handleAppendTagList = (e) => {
     const tagName = $("#search-tags")?.val() || '';
     const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
     const tagAsUpper = tagName.toUpperCase();
-    if (tagName && Object.values(formData).every(v => v.toUpperCase() !== tagAsUpper)) {
-      const match = $("#tags-search-list").find(`option[value="${tagAsUpper}"]`);
-      $("#current-article-tags").append(makeTag({
-        name: tagAsUpper,
-        id: match.data('tagId') || null,
-      }));
-
+    if (!tagName) {
+      showMessage({
+        msg: 'Tag name CANNOT be empty',
+        type: 'danger'
+      });
+      return;
+    } else if (!Object.values(formData).every(v => v.toUpperCase() !== tagAsUpper)) {
+      showMessage({
+        msg: 'Article already has this tag',
+        type: 'info'
+      });
       $("#search-tags").val('');
-      $("#tags-search-list").html('');
-    } else {
-      // console.log('tagName', tagName, 'CANT be added');
+      return;
     }
+
+    const match = $("#tags-search-list").find(`option[value="${tagAsUpper}"]`);
+    $("#current-article-tags").append(makeTag({
+      name: tagAsUpper,
+      id: match.data('tagId') || null,
+    }));
+
+    $("#search-tags").val('');
+    $("#tags-search-list").html('');
   }
 
   const handleTagClick = (e) => {
@@ -630,8 +649,8 @@
     $editTagsModal.on('hidden.bs.modal', redirectToSelf);
 
     const $ownArticleActions = $("#own-article-actions");
-    $ownArticleActions.on('click', 'button.btn-success[data-own-article-id]', handleBookmarkArticle);
-    $ownArticleActions.on('click', 'button.btn-danger[data-own-article-id]', handleRemoveBookmark);
+    $ownArticleActions.on('click', 'button.btn-success[data-article-id]', handleBookmarkArticle);
+    $ownArticleActions.on('click', 'button.btn-danger[data-article-id]', handleRemoveBookmark);
     $ownArticleActions.on('click', 'button.btn-info[data-own-article-id]', showEditTagModal);
 
     $("#pages-own-articles-show").on('click', 'small.badge.rounded-pill', handleTagClick);
