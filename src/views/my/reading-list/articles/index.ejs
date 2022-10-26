@@ -11,6 +11,18 @@
     return `${(hours > 0)? `${hours} hr `: ''}` + `${(minutes > 0)? `${minutes} min`: ''}`
   }
 
+  const setTagFilter = (tagFilterName, trueOrFalse = false) => {
+    console.log('setTagFilter', $("#own-tag-filters-section").find(`input[name="user-tag-${tagFilterName}"]`));
+    console.log(`input[name="user-tag-${tagFilterName}"]`);
+    $("#own-tag-filters-section").find(`input[name="user-tag-${tagFilterName}"]`).prop('checked', trueOrFalse);
+    updateCheckedFilters();
+  }
+
+  const resetCheckedFilters = () => {
+    $("#own-tag-filters-section")?.find('input[type="checkbox"]').prop('checked', false);
+    updateCheckedFilters();
+  }
+
   let prevFiltersChecked = {};
 
   const updateCheckedFilters = (e) => {
@@ -39,6 +51,7 @@
     }).catch((err) => {
       console.error(err);
     }).finally(() => {
+      applyUrlFilters();
       toggleLoadOverLay();
     });
   }
@@ -220,6 +233,7 @@
       resp.data.tags.forEach((tag) => {
         ownTags[tag.id] = tag.name;
       });
+      console.log('own tags', ownTags);
       $("#own-tag-filters-section").html(generateOwnSearchFilters(ownTags));
     }).catch((err) => {
       console.error(err);
@@ -304,10 +318,26 @@
 
   }
 
-  const handleSearch = (e) => {
-    e.preventDefault();
+  const cleanUrlSearchParam = () => {
+    window.history.replaceState({}, document.title, location.protocol + '//' + location.host + location.pathname);
+  }
+
+
+  const handleSearch = (e, {
+    fromTag = false,
+    tag = ''
+  } = {}) => {
     toggleLoadOverLay();
-    let queries = parseFormData(new FormData(e.currentTarget));
+    let queries = {};
+    if (fromTag) {
+      queries = {
+        [`user-tag-${tag}`]: tag,
+      }
+
+    } else {
+      e.preventDefault();
+      queries = parseFormData(new FormData(e.currentTarget));
+    }
     axios({
       method: "GET",
       url: "/api/my/reading-list",
@@ -325,6 +355,12 @@
         displayErr: true
       });
     }).finally(() => {
+      if (fromTag) {
+        //update selected filter
+        setTagFilter(tag, true);
+      } else {
+        cleanUrlSearchParam();
+      }
       toggleLoadOverLay();
     });
   }
@@ -568,9 +604,38 @@
 
   }
 
+  const handleTagClick = (e) => {
+    // console.log('handleTagClick', e.currentTarget, e.target);
+    let tag = $(e.currentTarget).text();
+    if (tag) {
+      handleSearch(null, {
+        fromTag: true,
+        tag: tag
+      });
+      setTagFilter(tag, true);
+    }
+  }
+
+  const applyUrlFilters = () => {
+    const params = new URLSearchParams(window.location.search);
+    const params2 = new URL(window.location.href);
+    console.log('before', window.location.search);
+    console.log('applyUrlFilters', params);
+    console.log('applyUrlFilters 2', params.searchParams);
+    console.log(`params.get('tagFilter')`, params.get('tagFilter'));
+    if (params.has('tagFilter')) {
+      console.log('happens');
+      handleSearch(null, {
+        fromTag: true,
+        tag: params.get('tagFilter')
+      });
+      setTagFilter(params.get('tagFilter'), true);
+    }
+  }
 
   $(document).ready(() => {
     getOwnArticles();
+
     $("#filtersModal").on('hidden.bs.modal', updateCheckedFilters)
     $("#own-articles-search-section").on('submit', "#index-search-form", handleSearch);
 
@@ -586,6 +651,8 @@
     $ownArticlesIndex.on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);
     $ownArticlesIndex.on('click', 'div.card-actions button.btn-outline-info[data-own-article-id]', showEditTagModal);
     $ownArticlesIndex.on('click', 'div.card-actions button.btn-outline-danger[data-article-id]', handleRemoveBookmark);
+    $ownArticlesIndex.on('click', 'small.badge.rounded-pill', handleTagClick);
+
   });
 </script>
 

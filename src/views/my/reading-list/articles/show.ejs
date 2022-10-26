@@ -595,6 +595,13 @@
     }
   }
 
+  const handleTagClick = (e) => {
+    console.log('handleTagClick', e.currentTarget, e.target);
+    console.log($(e.currentTarget).text(), $(e.target).text());
+
+    window.location.replace(`/my/reading-list?tagFilter=${$(e.currentTarget).text()}`);
+  }
+
   $(document).ready(() => {
     getOwnArticle();
     // $('ul.nav > li.nav-item:first-child > a').attr('href', window.location.pathname || '/my/reading-list/articles/blank');
@@ -610,6 +617,8 @@
     $ownArticleActions.on('click', 'button.btn-success[data-own-article-id]', handleBookmarkArticle);
     $ownArticleActions.on('click', 'button.btn-danger[data-own-article-id]', handleRemoveBookmark);
     $ownArticleActions.on('click', 'button.btn-info[data-own-article-id]', showEditTagModal);
+
+    $("#pages-own-articles-show").on('click', 'small.badge.rounded-pill', handleTagClick);
 
   });
 </script>
