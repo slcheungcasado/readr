@@ -106,7 +106,6 @@
   }
 
   const generateTags = (article) => {
-    // console.log('generateTags article', article)
     return (article?.tags?.length == 0) ? '' : article?.tags.map(tag => {
       return (tag?.name) ? `<small class="badge rounded-pill text-bg-secondary m-2">${tag.name}</small>` : ''
     }).join('');
@@ -124,7 +123,6 @@
   }) => {
     const article = readingListArticle?.article || null;
     if (!article) return;
-    // console.log('refreshArticleActions article', article);
     const html = `
     <button
       class="btn btn-info mx-2"
@@ -163,9 +161,6 @@
       day: 'numeric'
     };
 
-    // console.log('generateArticleContent readingListArticle', readingListArticle);
-    // console.log('generateArticleContent meta', meta);
-
     const userTags = readingListArticle?.tags || [];
     const article = readingListArticle?.article || null;
 
@@ -178,8 +173,6 @@
       `
     }
 
-    // console.log('userTags', userTags);
-    // console.log('article', article);
     return `
       <div class="article-content">
         <div class="article-meta-data">
@@ -262,64 +255,20 @@
 
       </div>
     `
-
-    // <div class="article-main-content">
-    // ${(article?.content)? `${article.content}` : `<h3 class="text-center">This content is protected, please visit the main source directly or check out the related links below.</h3>`}
-    // </div>
-
-    // return `
-    // <div class="col">
-    //   <div class="card h-100">
-    //     <img src="${(article?.image)? article.image : "/imgs/olive-pfp.jpeg"}" class="card-img-top card-image" alt="card-image">
-    //     <div class="card-body text-dark">
-    //       <div class="card-source-info">
-    //         <strong class="article-source-name">
-    //           <a class="text-dark" href="${(article?.sourceURL)? article.sourceURL : " #"}">
-    //             ${(article?.sourceName)? article.sourceName : ""}
-    //           </a>
-    //         </strong>
-    //         <i class="article-author">${(article?.author)? article.author : ""}</i>
-    //         <small class="text-muted article-pubdate">${(article?.pubDate)? new Date(article.pubDate).toLocaleDateString("en-US", options) : ""}</small>
-    //       </div>
-    //       <div class="card-title-wrapper">
-    //         <h5 class="card-title">
-    //           <a class="text-dark" href="${(article?.url)? article.url : " #"}">
-    //             ${(article?.title)? shortenTitle(article.title) : "Card Title"}</a>
-    //         </h5>
-    //         <div class="card-tags-section">
-    //           ${generateTags(readingListArticle)}
-    //         </div>
-    //       </div>
-    //       <p class="card-text line-clamp">${(article?.description)? article.description: ""}</p>
-    //     </div>
-    //     <div class="card-bottom-readinglist">
-    //       <div class="card-actions">
-    //         <button class="btn btn-outline-secondary" data-own-article-id="${(readingListArticle?.id)? readingListArticle.id : null}">
-    //           <i class="fas fa-eye"></i>
-    //           <span>Read <small>${(article?.readingTime)? '(' + secondsToHoursMinutes(article.readingTime) + ')' : ''}</small></span>
-    //         </button>
-    //       </div>
-    //     </div>
-    //   </div>
-    // </div>
-    // `;
   }
 
   const handleTagSearch = (e) => {
-    // console.log(e.target, e.currentTarget, $(e.currentTarget)?.val());
     const code = e.keyCode;
 
     const tagName = $(e.currentTarget)?.val() || '';
     const formData = parseFormData(new FormData($('#tag-edit-form')[0]));
-
-    // console.log('handleTagSearch formData', formData)
 
     if (code == 8 || code == 9 ||
       code == 46 || code == 95 || code == 189 ||
       (code > 47 && code < 58) ||
       (code > 64 && code < 91) ||
       (code > 96 && code < 123)) {
-      // console.log('formData', formData);
+
       axios({
         method: 'POST',
         url: '/api/my/reading-list/articles/tags',
@@ -330,7 +279,6 @@
           }
         }
       }).then((resp) => {
-        // console.log(resp.data);
         $("#tags-search-list").html(refreshTagsSearchResult(resp.data.tags));
       }).catch(err => {
         console.error(err);
@@ -517,12 +465,9 @@
   }
 
   const showEditTagModal = (e) => {
-    // console.log(e.currentTarget, e.$target);
-    // console.log('showEditTagModal', e.currentTarget, e.$target);
     e.preventDefault();
     toggleLoadOverLay();
-    // console.log("handleBookmarkArticle called");
-    // console.log(e.currentTarget, e.$target);
+
     const $button = $(e.currentTarget)
     $button?.prop("disabled", true);
     const articleId = $button.data('ownArticleId');
@@ -535,7 +480,6 @@
       }
     }).then((resp) => {
       replaceEditTagModalContent(resp.data.articles);
-      // console.log(resp?.data);
     }).catch((err) => {
       console.error(err);
       generatePage({
@@ -562,8 +506,6 @@
   }
 
   const updateEditModalId = (id) => {
-    console.log('updating article id', $('button.btn-info[data-bs-target="#editTagsModal"]').data('ownArticleId'), id);
-    console.log($('button.btn-info[data-bs-target="#editTagsModal"]'));
     $('button.btn-info[data-bs-target="#editTagsModal"]').data('ownArticleId', id);
   }
 
@@ -639,7 +581,6 @@
 
   $(document).ready(() => {
     getOwnArticle();
-    // $('ul.nav > li.nav-item:first-child > a').attr('href', window.location.pathname || '/my/reading-list/articles/blank');
 
     const $editTagsModal = $("#editTagsModal");
     $editTagsModal.on('submit', "#tag-edit-form", handleTagEdit);
@@ -662,6 +603,7 @@
 <%- contentFor('body') %>
 <div id="pages-own-articles-show-wrapper" class="container-fluid">
   <div id="own-article-actions" class="d-flex my-2 justify-content-end">
+    <!-- User article actions generated and appended here -->
     <!-- <button class="btn btn-secondary">Edit Tag</button>
     <button class="btn btn-secondary">Remove Bookmark</button> -->
   </div>
@@ -681,7 +623,8 @@
               <label for="search-tags" class="form-label">Search tag:</label>
               <input list="tags-search-list" id="search-tags" name="tagName" autocomplete="off" class="form-control" />
               <datalist id="tags-search-list">
-                <!-- <option value="APPLE"></option> -->
+                <!-- Server-side search suggestions are appended here -->
+                <!-- <option value="HEADLINE"></option> -->
               </datalist>
               <button id="search-tag-add" type="button" class="btn btn-primary my-2">Add tag</button>
             </div>

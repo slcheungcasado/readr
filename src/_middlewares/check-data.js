@@ -1,5 +1,5 @@
 import handleErrors from "../controllers/_helpers/handle-errors.js";
-import { validationConfigs } from "../schemas/data-schemas.js";
+import { validationConfigs } from "../schemas/schema-validation-configs.js";
 
 export function checkData(schema) {
   return async function (req, res, next) {

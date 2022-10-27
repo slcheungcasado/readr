@@ -30,7 +30,6 @@
       margin: 0;
       padding-bottom: 20px;
       #form-wrapper {
-        // background-color: yellow;
         max-width: 380px;
         flex-grow: 1;
 
@@ -41,13 +40,9 @@
 
           img.avatar-big {
             margin: 10px;
-            // max-height: 100px;
-            // max-width: 100px;
             height: auto;
             width: 50%;
             border-radius: 50%;
-            // img {
-            // }
           }
 
           img.avatar-small {

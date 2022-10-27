@@ -1,5 +1,5 @@
 import yup from "yup";
-import { SUPPORTED_FORMATS } from "./data-schemas.js";
+import { SUPPORTED_FORMATS } from "./schema-validation-configs.js";
 
 export default yup.object().shape(
   {

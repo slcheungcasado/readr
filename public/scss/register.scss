@@ -3,7 +3,6 @@
 #pages-auth-register-wrapper {
   display: flex;
   flex-direction: column;
-  // justify-content: center;
   align-items: center;
   overflow-y: scroll;
   width: 100vw;
@@ -28,11 +27,9 @@
     border-radius: 10px;
     margin-bottom: 10rem;
     .row {
-      // justify-content: space-around;
       margin: 0;
       padding-bottom: 20px;
       #form-wrapper {
-        // background-color: yellow;
         max-width: 380px;
         flex-grow: 1;
         #register-form {

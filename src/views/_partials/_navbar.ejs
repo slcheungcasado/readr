@@ -1,18 +1,4 @@
 <script>
-  const highlightActivePage = (e) => {
-    $nav = $('.nav');
-    $navLinks = $nav.find("li a");
-    $navLinks.removeClass("active");
-    $navLinks.addClass("text-white");
-    $target = $nav.find(`li a[href="${window.location.pathname}"]`);
-    $target.addClass("active");
-  }
-
-  const toggleNavBar = (e) => {
-    $("#navbar").toggleClass('expanded');
-    $("#navbar-collapse").toggleClass('expanded');
-  }
-
   const replaceNavLower = ({
     isLoading,
     user
@@ -85,7 +71,9 @@
       })
     }).catch(() => {
       replaceNavLower();
-    })
+    }).finally(() => {
+
+    });
   }
 
   const handleLogout = (e) => {
@@ -97,19 +85,36 @@
     }).then(() => {
       $("ul.nav > li:first-child > a").attr('href', "/my/reading-list/articles/blank");
       window.location.href = '/auth/login';
+    }).finally(() => {
+
     });
 
+  }
+
+  const highlightActivePage = (e) => {
+    $nav = $('.nav');
+    $navLinks = $nav.find("li a");
+    $navLinks.removeClass("active");
+    $navLinks.addClass("text-white");
+    $target = $nav.find(`li a[href="${window.location.pathname}"]`);
+    $target.addClass("active");
+  }
+
+  const toggleNavBar = (e) => {
+    $("#navbar").toggleClass('expanded');
+    $("#navbar-collapse").toggleClass('expanded');
   }
 
 
   $(document).ready(() => {
     getMyProfile();
     highlightActivePage();
-    $('#navbar-collapse').on('click', toggleNavBar);
     $('#navbar').on('click', '#auth-logout', handleLogout);
+    const $navBarCollapse = $('#navbar-collapse');
+    $navBarCollapse.on('click', toggleNavBar);
 
     if (window.location.pathname.includes('/my/reading-list/articles/')) {
-      $('#navbar-collapse').trigger('click');
+      $navBarCollapse.trigger('click');
     }
 
   });
@@ -136,6 +141,7 @@
   </ul>
 
   <div id="navbar-lower">
+    <!-- Generated using replaceNavLower(), should vary depending on log-in status -->
     <!-- <div class="dropdown hidden">
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
         <div class="avatar-wrapper">

@@ -1,6 +1,6 @@
 import yup from "yup";
 import prisma from "../controllers/_helpers/prisma.js";
-import { SUPPORTED_FORMATS } from "./data-schemas.js";
+import { SUPPORTED_FORMATS } from "./schema-validation-configs.js";
 
 export default yup.object({
   email: yup

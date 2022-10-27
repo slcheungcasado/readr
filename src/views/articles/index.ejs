@@ -195,6 +195,32 @@
     }
   }
 
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    toggleLoadOverLay();
+    const queries = parseFormData(new FormData(e.currentTarget));
+    axios({
+      method: "GET",
+      url: "/api/articles",
+      params: {
+        ...queries
+      }
+    }).then((resp) => {
+      generatePage({
+        articles: resp.data.articles,
+        meta: resp.data.meta
+      });
+    }).catch((err) => {
+      console.error(err);
+      generatePage({
+        displayErr: true
+      });
+    }).finally(() => {
+      toggleLoadOverLay();
+    });
+  }
+
   const handlePageChange = (e) => {
     e.preventDefault();
     toggleLoadOverLay();
@@ -234,7 +260,6 @@
       //do pagination for current active topic
       let topic = $('a.active-topic').data('topic');
       url = (topic == 'headlines') ? '/api/articles' : `/api/articles/${topic}`;
-      //get current topic
       axios({
         method: 'GET',
         url,
@@ -257,31 +282,6 @@
       });
     }
 
-  }
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    toggleLoadOverLay();
-    const queries = parseFormData(new FormData(e.currentTarget));
-    axios({
-      method: "GET",
-      url: "/api/articles",
-      params: {
-        ...queries
-      }
-    }).then((resp) => {
-      generatePage({
-        articles: resp.data.articles,
-        meta: resp.data.meta
-      });
-    }).catch((err) => {
-      console.error(err);
-      generatePage({
-        displayErr: true
-      });
-    }).finally(() => {
-      toggleLoadOverLay();
-    });
   }
 
   const toggleButtonType = ($button) => {
@@ -359,9 +359,11 @@
     getArticles();
     $("#topic-filter").on('click', 'a.nav-link', getArticlesByFilter);
     $("#articles-search-section").on('submit', "#index-search-form", handleSearch);
-    $("#pages-articles-index").on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
-    $("#pages-articles-index").on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);
-    $("#pages-articles-index").on('click', 'div.card-actions button.btn-outline-danger[data-article-id]', handleRemoveBookmark);
+
+    const $pagesArticlesIndex = $("#pages-articles-index");
+    $pagesArticlesIndex.on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
+    $pagesArticlesIndex.on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);
+    $pagesArticlesIndex.on('click', 'div.card-actions button.btn-outline-danger[data-article-id]', handleRemoveBookmark);
   });
 </script>
 

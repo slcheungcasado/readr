@@ -7,10 +7,9 @@ import checkOwnership from "./_middlewares/_check_ownership.js";
 
 import loginSchema from "./schemas/login.js";
 import registrationSchema from "./schemas/registration.js";
+import updateProfile from "./schemas/update-profile.js";
 import addToReadingList from "./schemas/add-to-reading-list.js";
 import removeFromReadingList from "./schemas/remove-from-reading-list.js";
-import updateProfile from "./schemas/update-profile.js";
-import showOwnArticleTags from "./schemas/show-own-article.js";
 import indexMatchingTags from "./schemas/index-matching-tags.js";
 import editTagsSchema from "./schemas/update-own-article-tags.js";
 
@@ -146,11 +145,6 @@ router.get(
   "/articles",
   (await import("./controllers/pages/articles/index.js")).default
 );
-
-// router.get(
-//   "/articles/:id",
-//   (await import("./controllers/pages/articles/show.js")).default
-// );
 
 // PAGES | STATIC
 router.get(

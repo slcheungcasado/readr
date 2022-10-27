@@ -91,7 +91,6 @@
     e.preventDefault();
 
     const data = new FormData(e.target);
-    console.log('data', parseFormData(data));
     $('#register-form button[type="submit"]').attr('disabled', true);
 
     axios({
