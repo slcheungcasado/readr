@@ -3,15 +3,11 @@
 <script>
   const getArticles = async () => {
     toggleLoadOverLay();
-    // console.log("Fetching articles...");
     try {
       const resp = await axios({
         method: 'GET',
-        // url: 'https://dev.to/api/articles',
-        // url: '/api/my/subscriptions/devto'
         url: '/api/articles',
       });
-      // console.log(resp);
       generatePage({
         articles: resp.data.articles,
         meta: resp.data.meta,
@@ -54,7 +50,6 @@
       month: 'short',
       day: 'numeric'
     };
-    // console.log('generateArticle meta', meta)
     return `
     <div class="col">
       <div class="card h-100">
@@ -98,17 +93,31 @@
     `;
   }
 
+  const hasSearchQuery = () => {
+    return Boolean($('#index-search-form input[name="q"]').val());
+  }
+
   const generateArticles = ({
     articles,
     meta
   } = {}) => {
-    // console.log("articles in generateArticles", articles);
     if (articles?.length > 0) {
       return `
       <div id="cards-section" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-4 g-4">
         ${articles.map((art) => generateArticle(art, meta)).join('')}
       </div>
       `;
+    } else {
+      return `
+    <div class="d-flex flex-column justify-content-center align-items-center" style="width:100%;height:100vh;">
+      ${(hasSearchQuery())?
+      `<h3>No matching articles found!</h3>` :
+      `
+      <h3 class="text-center">Your list is empty!</h3>
+      <a class="btn btn-secondary my-3" href="/articles">Search News</a>
+      `}
+    </div>
+    `;
     }
   }
 
@@ -118,9 +127,7 @@
       currentPage,
       totalPages
     } = info.meta;
-    // console.log("This happens before", currentPage, totalPages);
     if ($(".load-overlay").hasClass('visually-hidden')) return '';
-    // console.log("This happens", currentPage, totalPages);
 
     let links = ''
     if (totalPages > 2 && currentPage > 1) links += `<li class="page-item"><a class="page-link" href="#" data-page="1">First</a></li>`
@@ -142,13 +149,10 @@
 
 
   const generatePage = (info) => {
-    // console.log("info", info?.articles?.article?.content);
     const $page = $("#pages-articles-index");
     const $title = generateTitle(info);
-    // console.log('info before GenerateArticles', info);
     const $articles = generateArticles(info);
     const $pagination = generatePagination(info);
-    // console.log("$pagination", $pagination);
 
     $page.html('').append($title).append($articles).append($pagination);
   }
@@ -161,7 +165,6 @@
     //on the topic and not the search result value
     $("#index-search-form").trigger("reset");
 
-    // console.log(e, e.target, e.currentTarget);
     const $target = $(e.currentTarget);
     const $parentContainer = $('#topic-filter');
     $parentContainer.find('.nav-item a.nav-link').removeAttr('aria-current').removeClass('active-topic');
@@ -192,13 +195,8 @@
     }
   }
 
-  // const ignoreBadLink = (e) => {
-  //   console.log(e.currentTarget);
-  // }
-
   const handlePageChange = (e) => {
     e.preventDefault();
-    // console.log("handlePageChange called");
     toggleLoadOverLay();
 
     /*
@@ -232,8 +230,8 @@
         toggleLoadOverLay();
       });
     } else {
-      //do pagination for current active topic
 
+      //do pagination for current active topic
       let topic = $('a.active-topic').data('topic');
       url = (topic == 'headlines') ? '/api/articles' : `/api/articles/${topic}`;
       //get current topic
@@ -301,8 +299,7 @@
   const handleBookmarkArticle = (e) => {
     e.preventDefault();
     toggleLoadOverLay();
-    // console.log("handleBookmarkArticle called");
-    // console.log(e.currentTarget, e.$target);
+
     const $button = $(e.currentTarget)
     const articleId = $button.data('article-id');
 
@@ -314,6 +311,10 @@
       }
     }).then((resp) => {
       toggleButtonType($button)
+      showMessage({
+        msg: 'Article added to your reading list',
+        type: 'success'
+      });
     }).catch((err) => {
       console.error(err);
       generatePage({
@@ -328,8 +329,6 @@
   const handleRemoveBookmark = (e) => {
     e.preventDefault();
     toggleLoadOverLay();
-    // console.log("handleRemoveBookmark called");
-    // console.log(e.currentTarget, e.$target);
     const $button = $(e.currentTarget)
     const articleId = $button.data('article-id');
 
@@ -340,11 +339,11 @@
         articleId
       }
     }).then((resp) => {
-      // generatePage({
-      // articles: resp.data.articles,
-      // meta: resp.data.meta
-      // });
       toggleButtonType($button);
+      showMessage({
+        msg: 'Article removed from your reading list',
+        type: 'warning'
+      });
     }).catch((err) => {
       console.error(err);
       generatePage({
@@ -359,7 +358,6 @@
   $(document).ready(() => {
     getArticles();
     $("#topic-filter").on('click', 'a.nav-link', getArticlesByFilter);
-    // $("#pages-articles-index").on('click', '.card a', ignoreBadLink);
     $("#articles-search-section").on('submit', "#index-search-form", handleSearch);
     $("#pages-articles-index").on('click', 'ul.pagination li.page-item a.page-link', handlePageChange);
     $("#pages-articles-index").on('click', 'div.card-actions button.btn-outline-success[data-article-id]', handleBookmarkArticle);
