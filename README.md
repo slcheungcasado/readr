@@ -1,34 +1,21 @@
-# Instructions
-- Clone and rename folder `$ git clone git@github.com:dented-academy/express-full-starter.git [your_project_name_here]`
-- Find and rename all instance of `[your_project_name_here]` to your actual project name
-- Run `$ npm install`
-- Run `$ npx prisma init`
-- Add to `.env` file (create if not exist)
-  ```env
-  DATABASE_URL="postgresql://[user]:[password]@localhost:5432/[your_project_name_here]"
-  SECRET_COOKIE_PASSWORD="complex_password_at_least_32_characters_long"
-  ```
-- Add `models` to `prisma/schema.prisma`
-- Run `$ npx prisma migrate dev`
-- Run `$ rm -rf .git`
-- Run `$ git init`
-- Create a new repo in github and add the repo ssh link to remote
-- Run `$ git add .`
-- Run `$ git commit -m 'init'`
-- Run `$ git push origin master`
+# readr
 
-# Heroku Deploy
-- Run `$ heroku create` (This create another remote name `heroku` just like `origin`)
-- Run `$ heroku addons:create papertrail` (this adds a service that will keep your logs)
-- Run `$ heroku addons:create heroku-postgresql:hobby-dev` (this adds a postgresql)
-- Add env variables (except `DATABASE_URL`) to heroku
-  - Through Website
-    - Login to heroku dashboard and select your app
-    - Go to `Settings -> Config Vars -> Reveal Config Vars`
-    - Add all items you have in `.env` (You should add a different value for keys like S3)
-  - Through CLI
-    - Use `$ heroku config:set KEY=value`
-    - Add all items you have in `.env` (You should add a different value for keys like S3)
-- Add an extra `NODE_ENV=production` env to heroku
-- Run `$ git push heroku [branch-name:]master` (add `branch-name:` if you are not in the master branch)
-- Run `$ heroku open`
+A news aggregation site built using Express, EJS, Bootstrap, jQuery, Font Awesome, Postgres, Prisma ORM, and AWS S3. The articles shown are sourced from Google News.
+
+## Features
+
+- Responsive Design
+
+  - Regular
+  <div><img src="images/index-big.png" alt="big-view" style="width: 600px; display: block; margin: 0 auto"></div>
+
+  - Small
+  <div><img src="images/index-small.png" alt="small-view" style="width: 300px; display: block; margin: 0 auto"></div>
+
+- Browse articles by keyword or category
+- User accounts
+- Logged in users may make their own personalised list of articles that interest them by bookmarking articles
+- Bookmarked articles can be tagged for convenience
+  <div><img src="images/edit-tag.png" alt="small-view" style="width: 600px; display: block; margin: 0 auto"></div>
+- Bookmarked articles can also be opened in a simple reader view
+  <div><img src="images/reader-view.png" alt="small-view" style="width: 600px; display: block; margin: 0 auto"></div>
