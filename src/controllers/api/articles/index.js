@@ -2,11 +2,9 @@ import handleErrors from "../../_helpers/handle-errors.js";
 
 import * as neoGnews from "../../_helpers/neo-gnews.js";
 
-import { cacheIfNeeded } from "../../_helpers/prisma-is-cached.js";
-
-import prisma from "../../_helpers/prisma.js";
 import { Topic } from "@prisma/client";
-import { sortByField, sortByRelevance } from "../../_helpers/sort-utils.js";
+import prisma from "../../_helpers/prisma.js";
+import { cacheIfNeeded } from "../../_helpers/prisma-is-cached.js";
 
 export default async function (req, res) {
   try {
@@ -30,6 +28,9 @@ export default async function (req, res) {
     // Get most recent log date to cache results if required
     try {
       mostRecentLog = await prisma.cacheLog.findFirstOrThrow({
+        where: {
+          topic: Topic.HEADLINE,
+        },
         orderBy: {
           createdAt: "desc",
         },

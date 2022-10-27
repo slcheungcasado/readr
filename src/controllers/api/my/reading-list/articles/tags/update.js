@@ -15,9 +15,6 @@ export default async function (req, res) {
       }
     }
 
-    // console.log("id (readingListArticle)", id);
-    // console.log("connectTagQuery", connectTagQuery);
-
     const connectTagQuery = [
       ...userTags.map((name) => {
         return {

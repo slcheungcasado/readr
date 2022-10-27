@@ -45,7 +45,6 @@ export default async function (req, res) {
       });
     } else {
       for (let [key, value] of Object.entries(currTags)) {
-        // console.log(key, value);
         if (key.startsWith("user-tag")) {
           userTags.push(value.toUpperCase());
         }

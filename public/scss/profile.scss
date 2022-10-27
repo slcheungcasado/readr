@@ -39,26 +39,24 @@
           flex-direction: column;
           align-items: center;
 
-          .avatar-big {
+          img.avatar-big {
             margin: 10px;
-            max-height: 100px;
-            max-width: 100px;
-            img {
-              height: 100px;
-              width: 100px;
-              border-radius: 50%;
-            }
+            // max-height: 100px;
+            // max-width: 100px;
+            height: auto;
+            width: 50%;
+            border-radius: 50%;
+            // img {
+            // }
           }
 
-          .avatar-small {
+          img.avatar-small {
             margin: 10px;
             max-height: 32px;
             max-width: 32px;
-            img {
-              height: 32px;
-              width: 32px;
-              border-radius: 50%;
-            }
+            height: 32px;
+            width: 32px;
+            border-radius: 50%;
           }
         }
 

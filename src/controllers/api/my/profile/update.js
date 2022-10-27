@@ -6,6 +6,8 @@ import updateProfile from "../../../../schemas/update-profile.js";
 import prisma from "../../../_helpers/prisma.js";
 import { s3 } from "../../../_helpers/s3-client.js";
 import uploadFileAsync from "../../../_helpers/upload-file.js";
+import { isUniqueUserEmail } from "../../../_helpers/prisma-unique-email.js";
+import yup from "yup";
 
 export default async function (req, res) {
   try {
@@ -27,21 +29,25 @@ export default async function (req, res) {
       avatar: "",
     };
 
-    //#BUG: Error feedback for Error(...) do not show
     try {
       const currData = await prisma.user.findUnique({ where: { id } });
 
-      if (!(await bcrypt.compare(verifiedData.password, currData.passwordHash)))
-        return handleErrors(res, new Error("Incorrect password"));
+      if (
+        !(await bcrypt.compare(verifiedData.password, currData.passwordHash))
+      ) {
+        const err = new yup.ValidationError("Incorrect password");
+        err.inner = [{ path: "password", errors: ["Incorrect password"] }];
+        return handleErrors(res, err);
+      }
 
       if (
         verifiedData?.email &&
         verifiedData.email !== currData.email &&
         !(await isUniqueUserEmail(verifiedData.email))
       ) {
-        // console.log("This happens");
-        // throw new Error("Email already taken");
-        return handleErrors(res, new Error("Email already taken"));
+        const err = new yup.ValidationError("Email already taken");
+        err.inner = [{ path: "email", errors: ["Email already taken"] }];
+        return handleErrors(res, err);
       } else
         dataToSave.email = verifiedData?.email
           ? verifiedData.email

@@ -79,13 +79,17 @@
       $msgPanel.removeClass(bgColors.join(' '));
       $msgPanel.addClass(bgColorClass);
       $msgPanel.text(msg);
-      $msgPanel.removeClass('fadeOut');
-      $msgPanel.addClass('fadeIn');
+      $msgPanel.removeClass('fadeInFadeOut');
+      void $msgPanel[0].offsetWidth;
+      $msgPanel.addClass('fadeInFadeOut');
       setTimeout(function() {
-        $msgPanel.removeClass('fadeIn');
-        $msgPanel.addClass('fadeOut');
-      }, 2000);
+        $msgPanel.removeClass('fadeInFadeOut');
+      }, 3000);
     }
+
+    // const elm = $(".user-action-feedback-log");
+    // let clone = elm.cloneNode(true);
+    // elm.parentNode.replaceChild(clone, elm);
 
     $(document).ready(() => {
       // $('form').on('submit', toggleLoadOverLay);

@@ -159,6 +159,14 @@
     `;
   }
 
+  const hasSearchQuery = () => {
+    return Boolean($('#index-search-form input[name="q"]').val());
+  }
+
+  const hasSearchFilter = () => {
+    return Boolean($("#own-tag-filters-section")?.find('input[type="checkbox"]:checked')?.[0]);
+  }
+
   const generateArticles = ({
     articles,
     meta
@@ -169,6 +177,17 @@
         ${articles.map((art) => generateArticle(art, meta)).join('')}
       </div>
       `;
+    } else {
+      return `
+        <div class="d-flex flex-column justify-content-center align-items-center" style="width:100%;height:100vh;">
+          ${(hasSearchQuery() || hasSearchFilter())?
+            `<h3>No matching articles found!</h3>` :
+            `
+            <h3 class="text-center">Your list is empty!</h3>
+            <a class="btn btn-secondary my-3" href="/articles">Search News</a>
+            `}
+        </div>
+        `;
     }
   }
 

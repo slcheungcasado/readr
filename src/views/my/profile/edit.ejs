@@ -42,7 +42,9 @@
           </div>
 
           <div class="mb-3">
-            <label for="user-password" class="form-label">Password<sup>*</sup></label>
+            <label for="user-password" class="form-label">Password<sup>*</sup>
+              <small class="text-muted">(Required to apply changes)</small>
+            </label>
             <input
               id="user-password"
               class="form-control ${(errors?.password)?'is-invalid' : ''}"
@@ -53,16 +55,17 @@
             <div class="invalid-feedback">${errors?.password || ''}</div>
           </div>
 
+
           <div class="mb-3">
-            <label for="user-password-confirmation" class="form-label">Confirm Password<sup>*</sup></label>
-            <input
-              id="user-password-confirmation"
-              class="form-control ${(errors?.passwordConfirmation)? 'is-invalid' : ''}"
-              name="passwordConfirmation"
-              value="${user?.passwordConfirmation || ''}"
-              type="password"
-            ></input>
-            <div class="invalid-feedback">${errors?.passwordConfirmation || ''}</div>
+            <label for="user-new-password" class="form-label">New Password<sup>*</sup></label>
+            <input id="user-new-password" class="form-control ${errors?.newPassword && 'is-invalid'}" name="newPassword" value="${user?.newPassword || ''}" type="password"></input>
+            <div class="invalid-feedback">${errors?.newPassword || ''}</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="user-new-password-confirmation" class="form-label">Confirm Password<sup>*</sup></label>
+            <input id="user-new-password-confirmation" class="form-control ${errors?.newPasswordConfirmation && 'is-invalid'}" name="newPasswordConfirmation" value="${user?.newPasswordConfirmation || ''}" type="password"></input>
+            <div class="invalid-feedback">${errors?.newPasswordConfirmation || ''}</div>
           </div>
 
           <div class="mb-3">
